@@ -17,4 +17,8 @@ public class StockMarket {
     void ForcedMarketPrice(ArrayList<Double> ForcedMarketPrices){
         TrackedStock.ForcedStock(ForcedMarketPrices);
     }
+
+    void sell(int amount){
+
+    }
 }

@@ -76,7 +76,7 @@ public class Buyer extends Unit {
             case 1:
                 int amount = getTransactionAmount();
                 stockMarket.sell(amount);
-                System.out.println(name + " Sold " + amount + " shares at a price of " + stockMarket.getCurrentSellingPrice());
+                System.out.println(name + " Sold " + amount + " shares at a price of " + stockMarket.getCurrentPrice());
                 break;
             case 2:
 
