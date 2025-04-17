@@ -1,7 +1,7 @@
 import Skeleton.*;
 import java.util.Random;
 
-public class Buyer extends Unit {
+public class Buyer extends Unit implements StockObserver {
     /// Base stats for behavioral tendencies
     double baseTrust;
     /// the more active a buyer is the more it looks in the present when looking at trend.

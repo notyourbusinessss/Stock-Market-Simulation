@@ -1,6 +1,8 @@
 import java.util.ArrayList;
+import java.util.List;
 
 public class Stock {
+    private List<StockObserver> observers = new ArrayList<>();
     private double currentPrice;
     private ArrayList<Double> trackedPrices;
 
