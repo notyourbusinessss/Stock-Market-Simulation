@@ -38,6 +38,7 @@ public class Buyer extends Unit {
         if (confidence < -10) return 1; // SELL
         if (confidence > 10) return 2;  // BUY
         return 3;                       // HOLD
+
     }
 
     /**
