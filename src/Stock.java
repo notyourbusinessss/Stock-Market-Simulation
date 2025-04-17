@@ -27,4 +27,8 @@ public class Stock {
     double getCurrentPrice(){
         return currentPrice;
     }
+
+    void ForcedStock(ArrayList<Double> ForcedMarketPrices){
+       trackedPrices = ForcedMarketPrices;
+    }
 }

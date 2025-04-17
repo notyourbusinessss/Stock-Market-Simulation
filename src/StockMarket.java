@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class StockMarket {
     Stock TrackedStock;
     /**
@@ -10,5 +12,9 @@ public class StockMarket {
     }
     double getCurrentPrice(){
         return TrackedStock.getCurrentPrice();
+    }
+
+    void ForcedMarketPrice(ArrayList<Double> ForcedMarketPrices){
+        TrackedStock.ForcedStock(ForcedMarketPrices);
     }
 }

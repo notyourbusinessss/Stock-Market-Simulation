@@ -4,12 +4,29 @@ import java.util.Random;
 public class Buyer extends Unit {
     /// Base stats for behavioral tendencies
     double baseTrust;
+    /// the more active a buyer is the more it looks in the present when looking at trend.
     double activity;
     StockMarket stockMarket;
+    String name;
+    int holding;
 
 
     public Buyer(SimulationInput input) {
         super(input);
+    }
+
+    /**
+     * depending on how active someone is they would look at trends in different time frames
+     * @return an integer representing hours
+     */
+    int getLookbackHours() {
+        int maxLookback = 730; // one month in hours
+        int minLookback = 24; // one day in hours, duh...
+
+        double ratio = activity / 100.0;
+        int lookback = (int)(maxLookback - ratio * (maxLookback - minLookback));
+
+        return lookback;
     }
 
     /**
@@ -20,7 +37,8 @@ public class Buyer extends Unit {
      * @return
      */
     int makeDecision() {
-        double percent = stockMarket.getMarketTrend(50)/stockMarket.getCurrentPrice();
+
+        double percent = stockMarket.getMarketTrend(getLookbackHours())/stockMarket.getCurrentPrice();
         // Normalize market trend for weighting
         double trendScore = percent * 100; // e.g. +5 for up 5%, -10 for down 10%
         trendScore = Math.max(-100, Math.min(100, trendScore)); // clamp range
@@ -35,9 +53,17 @@ public class Buyer extends Unit {
                 + randomness;
 
         // Decision thresholds
-        if (confidence < -10) return 1; // SELL
-        if (confidence > 10) return 2;  // BUY
+        if (confidence < -10 && holding > 0){ //cannot sell something they do not have
+
+            return 1; // SELL
+        }
+        if (confidence > 10) {
+            return 2;  // BUY
+        }
         return 3;                       // HOLD
+
+    }
+    int getTransactionAmount() {
 
     }
 
@@ -46,7 +72,20 @@ public class Buyer extends Unit {
      */
     @Override
     public void performAction() {
+        switch (makeDecision()) {
+            case 1:
+                int amount = getTransactionAmount();
+                stockMarket.sell(amount);
+                System.out.println(name + " Sold " + amount + " shares at a price of " + stockMarket.getCurrentSellingPrice());
+                break;
+            case 2:
 
+                break;
+            case 3:
+                //Do nothing, your holding...
+                break;
+
+        }
     }
 
     /**
@@ -62,6 +101,6 @@ public class Buyer extends Unit {
      * @param args
      */
     public static void main(String[] args) {
-
+        Buyer buyer = new Buyer(new SimulationInput());
     }
 }
