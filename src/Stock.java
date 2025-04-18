@@ -54,7 +54,11 @@ public class Stock implements MarketObserver{
     }
 
     int AVGAvalibleShares(){
-
+        int sum = 0;
+        for(int i : trackedShares){
+            sum += i;
+        }
+        return sum/trackedShares.size();
     }
 
     double getCurrentPrice(){
@@ -64,9 +68,20 @@ public class Stock implements MarketObserver{
     void ForcedStock(ArrayList<Double> ForcedMarketPrices){
        trackedPrices = ForcedMarketPrices;
     }
+    void NotifyBuyers(){
+        for(StockObserver observer : observers){
+            observer.getnewpricing(currentPrice);
+        }
+    }
 
     @Override
-    public void updateMarketState() {
-
+    public void updateMarketState(int shares, double price) {
+        trackedPrices.add(price);
+        trackedShares.add(shares);
+        currentPrice = price;
+        if(currentPrice != trackedPrices.getLast()){
+            System.out.println("!!!!!!!!!!!!!!!!!!!!! ERROR !!!!!!!!!!!!!!!!!!!!!");
+        }
+        NotifyBuyers();
     }
 }

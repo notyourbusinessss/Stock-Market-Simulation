@@ -6,11 +6,18 @@ import java.util.List;
 /**
  * The stock market is the middle ground of the interactions between the buyers and the Stock, here is where the buyers will buy or sell their stocks.
  */
-public class StockMarket extends Object implements StockObserver {
+public class StockMarket extends Object{
     Stock TrackedStock;
     private int avalibleShares;
     private List<MarketObserver> Stocks = new ArrayList<>();
     double MarketPrice;
+    /**
+     * Time in which the simulation will run
+     */
+    int Time;
+
+    static boolean open;
+
     /**
      * This will calculate the trend over a specified amount of time and give you the trend
      * @return
@@ -33,6 +40,10 @@ public class StockMarket extends Object implements StockObserver {
     }
 
     void updateStockPrice(){
+        if(avalibleShares == 0){
+
+            return;
+        }
         if(avalibleShares > TrackedStock.AVGAvalibleShares()){
             double percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1) - 1;
             /// update Market Price
@@ -47,7 +58,7 @@ public class StockMarket extends Object implements StockObserver {
     int getAvalibleShares(){
         return avalibleShares;
     }
-    void buy(int amount){
+    void buy(int amount,Buyer buyer){
 
     }
     void updateStock(){
@@ -56,4 +67,9 @@ public class StockMarket extends Object implements StockObserver {
             observer.updateMarketState(avalibleShares, MarketPrice);
         }
     }
+
+    static boolean isOpen(){
+        return open;
+    }
+
 }

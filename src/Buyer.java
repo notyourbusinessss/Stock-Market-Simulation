@@ -17,6 +17,7 @@ public class Buyer extends Unit implements StockObserver {
      *
      */
     double activity;
+    boolean newpricing;
     StockMarket stockMarket;
     String name;
     /**
@@ -110,7 +111,7 @@ public class Buyer extends Unit implements StockObserver {
                 break;
             case 2:
                 int buyAmount = getTransactionAmount(false);
-                stockMarket.buy(buyAmount);
+                stockMarket.buy(buyAmount,this);
                 break;
             case 3:
                 //Do nothing, your holding...
@@ -127,11 +128,27 @@ public class Buyer extends Unit implements StockObserver {
 
     }
 
+    @Override
+    public void run() {
+        while (StockMarket.isOpen()) {
+            if(newpricing){
+                performAction();
+                /// at the end of the action make the newpricing variable false
+                newpricing = false;
+            }
+        }
+    }
+
     /**
      * Testing grounds
      * @param args
      */
     public static void main(String[] args) {
         Buyer buyer = new Buyer(new SimulationInput());
+    }
+
+    @Override
+    public void getnewpricing(double price) {
+
     }
 }
