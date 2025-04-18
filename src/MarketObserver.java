@@ -1,3 +1,3 @@
 public interface MarketObserver {
-    void updateMarketState();
+    void updateMarketState(int shares, double price);
 }

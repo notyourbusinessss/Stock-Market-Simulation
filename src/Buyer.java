@@ -19,11 +19,21 @@ public class Buyer extends Unit implements StockObserver {
     double activity;
     StockMarket stockMarket;
     String name;
+    /**
+     * current holding of the buyer.
+     */
     int holding;
 
 
     public Buyer(SimulationInput input) {
         super(input);
+    }
+
+    void removeholding(int amount){
+        holding -= amount;
+    }
+    void addholding(int amount){
+        holding += amount;
     }
 
     /**
@@ -95,7 +105,7 @@ public class Buyer extends Unit implements StockObserver {
         switch (makeDecision()) {
             case 1:
                 int soldAmount = getTransactionAmount(true);
-                stockMarket.sell(soldAmount);
+                stockMarket.sell(soldAmount,this);
                 System.out.println(name + " Sold " + soldAmount + " shares at a price of " + stockMarket.getCurrentPrice() + " totaling at a price of " + stockMarket.getCurrentPrice()*soldAmount);
                 break;
             case 2:

@@ -11,6 +11,7 @@ public class Stock implements MarketObserver{
     private List<StockObserver> observers = new ArrayList<>();
     private double currentPrice;
     private ArrayList<Double> trackedPrices;
+    private ArrayList<Integer> trackedShares;
 
 
     /// let's make it a singleton yaaayyyyy
@@ -51,6 +52,11 @@ public class Stock implements MarketObserver{
         }
         return trend;
     }
+
+    int AVGAvalibleShares(){
+
+    }
+
     double getCurrentPrice(){
         return currentPrice;
     }
