@@ -17,6 +17,7 @@ public class Buyer extends Unit implements StockObserver {
      *
      */
     double activity;
+    double price;
     boolean newpricing;
     StockMarket stockMarket;
     String name;
@@ -28,6 +29,15 @@ public class Buyer extends Unit implements StockObserver {
 
     public Buyer(SimulationInput input) {
         super(input);
+    }
+    public Buyer(SimulationInput input, String name, int holding, StockMarket stockMarket, double baseTrust, double activity) {
+        super(input);
+        this.name = name;
+        this.holding = holding;
+        this.stockMarket = stockMarket;
+        this.baseTrust = baseTrust;
+        this.activity = activity;
+
     }
 
     void removeholding(int amount){
@@ -149,6 +159,7 @@ public class Buyer extends Unit implements StockObserver {
 
     @Override
     public void getnewpricing(double price) {
+        newpricing = true;
 
     }
 }

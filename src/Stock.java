@@ -15,15 +15,17 @@ public class Stock implements MarketObserver{
 
 
     /// let's make it a singleton yaaayyyyy
-    private Stock(double currentPrice){
+    private Stock(double currentPrice,int shares){
         currentPrice = currentPrice;
         trackedPrices = new ArrayList<>();
         trackedPrices.add(currentPrice);
+        trackedShares = new ArrayList<>();
+        trackedShares.add(shares);
 
     }
-    public static synchronized Stock getInstance(double startingPrice){
+    public static synchronized Stock getInstance(double startingPrice,int shares){
         if(instance == null){
-            instance = new Stock(startingPrice);
+            instance = new Stock(startingPrice,shares);
         }
         return instance;
     }

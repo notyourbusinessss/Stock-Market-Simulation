@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * The stock market is the middle ground of the interactions between the buyers and the Stock, here is where the buyers will buy or sell their stocks.
  */
-public class StockMarket extends Object{
+public class StockMarket extends Unit{
     Stock TrackedStock;
     private int avalibleShares;
     private List<MarketObserver> Stocks = new ArrayList<>();
@@ -15,6 +15,7 @@ public class StockMarket extends Object{
      * Time in which the simulation will run
      */
     int Time;
+    int Now;
 
     static boolean open;
 
@@ -71,5 +72,36 @@ public class StockMarket extends Object{
     static boolean isOpen(){
         return open;
     }
+
+    @Override
+    public void performAction() {
+
+    }
+
+    @Override
+    public void submitStatistics() {
+
+    }
+
+
+    @Override
+    public void run() {
+        while (StockMarket.isOpen()) {
+            if(Now >= Time){
+                open = false;
+                break;
+            }
+            if(Now == 0){
+                /// initialize everything
+                Buyer buyer1 = new Buyer();
+            }else{
+                updateStock();
+
+            }
+
+            Time++;
+        }
+    }
+
 
 }
