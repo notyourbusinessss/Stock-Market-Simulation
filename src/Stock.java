@@ -19,7 +19,7 @@ public class Stock {
         trackedPrices.add(currentPrice);
 
     }
-    public static Stock getInstance(double startingPrice){
+    public static synchronized Stock getInstance(double startingPrice){
         if(instance == null){
             instance = new Stock(startingPrice);
         }
