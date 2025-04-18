@@ -2,6 +2,7 @@ import java.util.ArrayList;
 
 public class StockMarket implements StockObserver {
     Stock TrackedStock;
+    int avalibleShares;
     /**
      * This will calculate the trend over a specified amount of time and give you the trend
      * @return
