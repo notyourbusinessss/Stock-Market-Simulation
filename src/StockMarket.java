@@ -1,8 +1,10 @@
 import java.util.ArrayList;
+import java.util.List;
 
 public class StockMarket implements StockObserver {
     Stock TrackedStock;
-    int avalibleShares;
+    private int avalibleShares;
+    private List<MarketObserver> Stocks = new ArrayList<>();
     /**
      * This will calculate the trend over a specified amount of time and give you the trend
      * @return
@@ -21,5 +23,18 @@ public class StockMarket implements StockObserver {
 
     void sell(int amount){
 
+    }
+
+    int getAvalibleShares(){
+        return avalibleShares;
+    }
+    void buy(int amount){
+
+    }
+    void updateStock(){
+        /// make sure the stock only updates once per tick
+        for (MarketObserver observer : Stocks){
+            observer.updateMarketState();
+        }
     }
 }

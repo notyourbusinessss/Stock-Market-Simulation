@@ -2,9 +2,20 @@ import Skeleton.*;
 import java.util.Random;
 
 public class Buyer extends Unit implements StockObserver {
-    /// Base stats for behavioral tendencies
+    /**
+     * Base trust is the trust someone will have in a certain market
+     * 0   --> no trust in the market at all : will sell more then he will buy.
+     * 50  --> moderate trust : no action is more likely
+     * 100 --> Extreme trust in the market : will buy more than he will sell
+     */
     double baseTrust;
-    /// the more active a buyer is the more it looks in the present when looking at trend.
+    /**
+     * Represents on a scale of 0 - 100 how active and reactive a buyer is this determines the amount of stock he will buy/sell per transactions and how far back he will look back
+     * 0   --> looks quite far in the past, sells in and buys in low amounts
+     * 50  --> looks moderatly back into the pasts sells in moderate amounts
+     * 100 --> looks quite close to the present ( about 24h ) and sells/ buys in high amounts.
+     *
+     */
     double activity;
     StockMarket stockMarket;
     String name;
@@ -63,8 +74,17 @@ public class Buyer extends Unit implements StockObserver {
         return 3;                       // HOLD
 
     }
-    int getTransactionAmount() {
+    int getTransactionAmount(boolean selling) {
+        switch (selling ? 1 : 2) {
+            case 1:
 
+
+                break;
+            case 2:
+                int avalibleStocks = stockMarket.getAvalibleShares();
+
+                break;
+        }
     }
 
     /**
@@ -74,12 +94,13 @@ public class Buyer extends Unit implements StockObserver {
     public void performAction() {
         switch (makeDecision()) {
             case 1:
-                int amount = getTransactionAmount();
-                stockMarket.sell(amount);
-                System.out.println(name + " Sold " + amount + " shares at a price of " + stockMarket.getCurrentPrice());
+                int soldAmount = getTransactionAmount(true);
+                stockMarket.sell(soldAmount);
+                System.out.println(name + " Sold " + soldAmount + " shares at a price of " + stockMarket.getCurrentPrice() + " totaling at a price of " + stockMarket.getCurrentPrice()*soldAmount);
                 break;
             case 2:
-
+                int buyAmount = getTransactionAmount(false);
+                stockMarket.buy(buyAmount);
                 break;
             case 3:
                 //Do nothing, your holding...

@@ -4,8 +4,9 @@ import java.util.List;
 /**
  * Stock class will have the data of the stock and also the calculation of the trends
  * used singleton in order to [ADD DESCRIPTION HERE]
+ * Stock is also an observer of the market
  */
-public class Stock {
+public class Stock implements MarketObserver{
     private static Stock instance = null;
     private List<StockObserver> observers = new ArrayList<>();
     private double currentPrice;
@@ -56,5 +57,10 @@ public class Stock {
 
     void ForcedStock(ArrayList<Double> ForcedMarketPrices){
        trackedPrices = ForcedMarketPrices;
+    }
+
+    @Override
+    public void updateMarketState() {
+
     }
 }
