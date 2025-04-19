@@ -19,7 +19,7 @@ public class StockMarket extends Unit{
     int Time;
     int Now;
 
-    static boolean open;
+    static boolean open = true;
 
     public StockMarket(SimulationInput input) {
         super(input);
@@ -55,21 +55,32 @@ public class StockMarket extends Unit{
         avalibleShares += amount;
     }
 
-    void updateStockPrice(){
-        if(avalibleShares == 0){
-
+    void updateStockPrice() {
+        if (avalibleShares == 0) {
             return;
         }
-        if(avalibleShares > TrackedStock.AVGAvalibleShares()){
-            double percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1) - 1;
-            /// update Market Price
-        }else if(avalibleShares < TrackedStock.AVGAvalibleShares()){
-            double percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1) + 1;
-            /// update Market Price
-        }else{
 
+        double avg = TrackedStock.AVGAvalibleShares();
+        double percentage;
+
+        if (avalibleShares > avg) {
+            percentage = ((avalibleShares - avg) / avg) * -1 - 1;
+            MarketPrice += MarketPrice * percentage;
+        } else if (avalibleShares < avg) {
+            percentage = ((avalibleShares - avg) / avg) * -1 + 1;
+            MarketPrice += MarketPrice * percentage;
+        } else {
+            // when supply == average supply, apply slight decay
+            double decay = 1.0 / avg;
+            MarketPrice -= decay;
+        }
+
+        // Clamp price to a minimum of 1 cent
+        if (MarketPrice < 0.01) {
+            MarketPrice = 0.01;
         }
     }
+
 
     int getAvalibleShares(){
         return avalibleShares;
@@ -107,6 +118,7 @@ public class StockMarket extends Unit{
                 break;
             }
             if(Now == 0){
+                System.out.println("setting");
                 /// initialize everything
                 Buyer buyer1 = new Buyer(new SimulationInput(),"George -1-",(int)(this.avalibleShares*0.1),this,50,100);
                 this.avalibleShares -= buyer1.holding;
@@ -118,12 +130,14 @@ public class StockMarket extends Unit{
                 B.start();
 
             }else{
+                updateStockPrice();
                 updateStock();
-
             }
-
+            System.out.println(this.TrackedStock);
             Now++;
         }
+        System.out.println("stop");
+        return;
     }
 
     /**
@@ -132,7 +146,8 @@ public class StockMarket extends Unit{
      */
     public static void main(String[] args) {
        StockMarket stockMarket = new StockMarket(new SimulationInput(),100,50.00,1000,0);
-
+        Thread A = new Thread(stockMarket);
+        A.start();
     }
 
 }

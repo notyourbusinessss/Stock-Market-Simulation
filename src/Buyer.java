@@ -96,17 +96,46 @@ public class Buyer extends Unit implements StockObserver {
 
     }
     int getTransactionAmount(boolean selling) {
+        // Base scaling factor derived from activity level
+        int baseAmount = (int)(activity / 10);
+        baseAmount += new Random().nextInt(5) - 2; // ±2 randomness
+        baseAmount = Math.max(1, baseAmount); // Ensure minimum of 1
+
         switch (selling ? 1 : 2) {
-            case 1:
+            case 1: { // SELL
+                if (holding <= 0) return 0;
 
+                // Trust and activity determine how aggressively to sell
+                double trustFactor = (100 - baseTrust) / 100.0; // Low trust → more likely to sell
+                double activityFactor = activity / 100.0;
+                double sellFactor = trustFactor * 0.7 + activityFactor * 0.3;
 
-                break;
-            case 2:
-                int avalibleStocks = stockMarket.getAvalibleShares();
+                // Add small randomness
+                sellFactor += (new Random().nextDouble() * 0.2) - 0.1;
+                sellFactor = Math.max(0.1, Math.min(1.0, sellFactor)); // Clamp to [10%, 100%]
 
-                break;
+                int amountToSell = (int)(holding * sellFactor);
+                return Math.max(1, Math.min(amountToSell, holding)); // never exceed holding
+            }
+            case 2: { // BUY
+                int available = stockMarket.getAvalibleShares();
+                if (available <= 0) return 0;
+
+                double trustFactor = baseTrust / 100.0; // High trust → buy more
+                double activityFactor = activity / 100.0;
+                double buyFactor = trustFactor * 0.7 + activityFactor * 0.3;
+
+                // Add small randomness
+                buyFactor += (new Random().nextDouble() * 0.2) - 0.1;
+                buyFactor = Math.max(0.1, Math.min(1.0, buyFactor)); // Clamp to [10%, 100%]
+
+                int amountToBuy = (int)(available * buyFactor);
+                return Math.max(1, Math.min(amountToBuy, available));
+            }
         }
+        return 0; // fallback
     }
+
 
     /**
      *

@@ -77,6 +77,13 @@ public class Stock implements MarketObserver{
     }
 
     @Override
+    public String toString() {
+        String output = "";
+        output += "Stock Price: " + this.trackedPrices.getLast() + "\n";
+        return output;
+    }
+
+    @Override
     public void updateMarketState(int shares, double price) {
         trackedPrices.add(price);
         trackedShares.add(shares);
