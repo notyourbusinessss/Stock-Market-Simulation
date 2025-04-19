@@ -81,7 +81,7 @@ public class Stock implements MarketObserver{
     @Override
     public String toString() {
         String output = "";
-        output += "Stock Price: " + this.trackedPrices.getLast();
+        output += "Stock Price: " + this.trackedPrices.getLast() + " with Shares: " + this.trackedShares.getLast();
         return output;
     }
 

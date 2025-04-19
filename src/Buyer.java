@@ -152,6 +152,7 @@ public class Buyer extends Unit implements StockObserver {
             case 2:
                 int buyAmount = getTransactionAmount(false);
                 stockMarket.buy(buyAmount,this);
+                System.out.println(name+ " bought " + buyAmount + " shares at a price of " + stockMarket.getCurrentPrice());
                 break;
             case 3:
                 //Do nothing, your holding...
@@ -182,6 +183,10 @@ public class Buyer extends Unit implements StockObserver {
                 }
                 performAction();
                 newpricing = false;
+
+                }
+            if(!stockMarket.isOpen()){
+                return;
             }
         }
     }

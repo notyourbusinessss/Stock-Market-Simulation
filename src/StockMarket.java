@@ -65,13 +65,13 @@ public class StockMarket extends Unit{
         double percentage;
 
         if (avalibleShares > avg) {
-            percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1) - 1;
+            percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1);
             System.out.println("\t\t avalible shares: " + avalibleShares + "; percentage: " + percentage);
-            MarketPrice = MarketPrice * percentage;
+            MarketPrice += MarketPrice * percentage;
         } else if (avalibleShares < avg) {
-            percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1) + 1;
+            percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1);
             System.out.println("\t\t avalible shares: " + avalibleShares + "; percentage: " + percentage);
-            MarketPrice = MarketPrice * percentage;
+            MarketPrice += MarketPrice * percentage;
         } else {
             // when supply == average supply, apply slight decay
             double decay = 1.0 / (avg == 0 ? MarketPrice : avg);
@@ -83,6 +83,7 @@ public class StockMarket extends Unit{
         if (MarketPrice < 0.01) {
             MarketPrice = 0.01;
         }
+
     }
 
 
@@ -90,7 +91,8 @@ public class StockMarket extends Unit{
         return avalibleShares;
     }
     void buy(int amount,Buyer buyer){
-
+        buyer.addholding(amount);
+        avalibleShares -= amount;
     }
     void updateStock(){
         /// make sure the stock only updates once per tick
