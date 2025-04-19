@@ -12,6 +12,7 @@ public class StockMarket extends Unit{
     private int avalibleShares;
     private List<MarketObserver> Stocks = new ArrayList<>();
     double MarketPrice;
+
     /**
      * Time in which the simulation will run
      */
@@ -22,6 +23,15 @@ public class StockMarket extends Unit{
 
     public StockMarket(SimulationInput input) {
         super(input);
+    }
+    public StockMarket(SimulationInput input, int totalShares, double InitialPrice, int time, int now) {
+        super(input);
+        this.avalibleShares = totalShares;
+        this.MarketPrice = InitialPrice;
+        this.Time = time;
+        this.Now = now;
+        TrackedStock = Stock.getInstance(this.MarketPrice, this.avalibleShares);
+
     }
 
     /**
@@ -92,22 +102,37 @@ public class StockMarket extends Unit{
     @Override
     public void run() {
         while (StockMarket.isOpen()) {
-            if(Now >= Time){
+            if(Now > Time){
                 open = false;
                 break;
             }
             if(Now == 0){
                 /// initialize everything
-                Buyer buyer1 = new Buyer();
+                Buyer buyer1 = new Buyer(new SimulationInput(),"George -1-",(int)(this.avalibleShares*0.1),this,50,100);
+                this.avalibleShares -= buyer1.holding;
+                Buyer buyer2 = new Buyer(new SimulationInput(),"Mark -2-",(int)(this.avalibleShares*0.1),this,50,100);
+                this.avalibleShares -= buyer2.holding;
+                Thread A  = new Thread(buyer1);
+                Thread B = new Thread(buyer2);
+                A.start();
+                B.start();
+
             }else{
                 updateStock();
 
             }
 
-            Time++;
+            Now++;
         }
     }
 
+    /**
+     * Testing grounds
+     * @param args
+     */
+    public static void main(String[] args) {
+       StockMarket stockMarket = new StockMarket(new SimulationInput(),100,50.00,1000,0);
 
+    }
 
 }
