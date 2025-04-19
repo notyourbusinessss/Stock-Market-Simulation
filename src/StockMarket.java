@@ -1,3 +1,4 @@
+import Skeleton.SimulationInput;
 import Skeleton.Unit;
 
 import java.util.ArrayList;
@@ -18,6 +19,10 @@ public class StockMarket extends Unit{
     int Now;
 
     static boolean open;
+
+    public StockMarket(SimulationInput input) {
+        super(input);
+    }
 
     /**
      * This will calculate the trend over a specified amount of time and give you the trend
@@ -102,6 +107,7 @@ public class StockMarket extends Unit{
             Time++;
         }
     }
+
 
 
 }
