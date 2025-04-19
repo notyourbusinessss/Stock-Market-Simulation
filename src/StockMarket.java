@@ -31,7 +31,7 @@ public class StockMarket extends Unit{
         this.Time = time;
         this.Now = now;
         TrackedStock = Stock.getInstance(this.MarketPrice, this.avalibleShares);
-
+        Stocks.add(TrackedStock);
     }
 
     /**
@@ -55,7 +55,8 @@ public class StockMarket extends Unit{
         avalibleShares += amount;
     }
 
-    void updateStockPrice() {
+    synchronized void updateStockPrice() {
+        System.out.println("\t\t updating");
         if (avalibleShares == 0) {
             return;
         }
@@ -64,17 +65,20 @@ public class StockMarket extends Unit{
         double percentage;
 
         if (avalibleShares > avg) {
-            percentage = ((avalibleShares - avg) / avg) * -1 - 1;
-            MarketPrice += MarketPrice * percentage;
+            percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1) - 1;
+            System.out.println("\t\t avalible shares: " + avalibleShares + "; percentage: " + percentage);
+            MarketPrice = MarketPrice * percentage;
         } else if (avalibleShares < avg) {
-            percentage = ((avalibleShares - avg) / avg) * -1 + 1;
-            MarketPrice += MarketPrice * percentage;
+            percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1) + 1;
+            System.out.println("\t\t avalible shares: " + avalibleShares + "; percentage: " + percentage);
+            MarketPrice = MarketPrice * percentage;
         } else {
             // when supply == average supply, apply slight decay
-            double decay = 1.0 / avg;
+            double decay = 1.0 / (avg == 0 ? MarketPrice : avg);
+            System.out.println("\t\t decaying " + decay);
             MarketPrice -= decay;
         }
-
+        System.out.println("\t\t MarketPrice : " + MarketPrice);
         // Clamp price to a minimum of 1 cent
         if (MarketPrice < 0.01) {
             MarketPrice = 0.01;
@@ -128,12 +132,18 @@ public class StockMarket extends Unit{
                 Thread B = new Thread(buyer2);
                 A.start();
                 B.start();
-
+                /*try {
+                    A.join();
+                    B.join();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }*/
             }else{
                 updateStockPrice();
                 updateStock();
             }
-            System.out.println(this.TrackedStock);
+            System.out.println(this.TrackedStock + " : " + this.Now);
+
             Now++;
         }
         System.out.println("stop");

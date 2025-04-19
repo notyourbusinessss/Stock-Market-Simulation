@@ -18,7 +18,7 @@ public class Buyer extends Unit implements StockObserver {
      */
     double activity;
     double price;
-    boolean newpricing;
+    volatile boolean newpricing = false;
     StockMarket stockMarket;
     String name;
     /**
@@ -32,12 +32,13 @@ public class Buyer extends Unit implements StockObserver {
     }
     public Buyer(SimulationInput input, String name, int holding, StockMarket stockMarket, double baseTrust, double activity) {
         super(input);
+        System.out.println("Creating Buyer");
         this.name = name;
         this.holding = holding;
         this.stockMarket = stockMarket;
         this.baseTrust = baseTrust;
         this.activity = activity;
-
+        stockMarket.TrackedStock.addObserver(this);
     }
 
     void removeholding(int amount){
@@ -69,7 +70,7 @@ public class Buyer extends Unit implements StockObserver {
      * @return
      */
     int makeDecision() {
-
+        System.out.println("\t\t Make Decision");
         double percent = stockMarket.getMarketTrend(getLookbackHours())/stockMarket.getCurrentPrice();
         // Normalize market trend for weighting
         double trendScore = percent * 100; // e.g. +5 for up 5%, -10 for down 10%
@@ -169,14 +170,22 @@ public class Buyer extends Unit implements StockObserver {
 
     @Override
     public void run() {
+        System.out.println("\t\t Running Buyer");
         while (StockMarket.isOpen()) {
-            if(newpricing){
+            synchronized (this) {
+                while (!newpricing) {
+                    try {
+                        wait(); // wait until notify() is called
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
                 performAction();
-                /// at the end of the action make the newpricing variable false
                 newpricing = false;
             }
         }
     }
+
 
     /**
      * Testing grounds
@@ -188,7 +197,11 @@ public class Buyer extends Unit implements StockObserver {
 
     @Override
     public void getnewpricing(double price) {
-        newpricing = true;
-
+        System.out.println(name + "\t\t Got new pricing");
+        synchronized (this) {
+            newpricing = true;
+            notify(); // wake up the thread
+        }
     }
+
 }

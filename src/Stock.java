@@ -32,13 +32,15 @@ public class Stock implements MarketObserver{
 
     void addObserver(StockObserver observer){
         observers.add(observer);
+        System.out.println("\t\t Observer added : " + observer.getClass().getName());
     }
 
     double getPriceAt(int time){
         return trackedPrices.get(time);
     }
 
-    double getTrend(int time){
+    double getTrend(int Given){
+        int time = Math.max(0, Math.min(Given, this.trackedPrices.size() - 1));
         double AVG = 0;
         double trend = 0;
         for(int i = time; i > 0; i--){
@@ -79,7 +81,7 @@ public class Stock implements MarketObserver{
     @Override
     public String toString() {
         String output = "";
-        output += "Stock Price: " + this.trackedPrices.getLast() + "\n";
+        output += "Stock Price: " + this.trackedPrices.getLast();
         return output;
     }
 

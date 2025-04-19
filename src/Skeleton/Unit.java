@@ -15,7 +15,9 @@ public abstract class Unit implements Runnable {
 	private Statistics stats;
 
 	public Unit(SimulationInput input) {
+		
 		this("DefaultUnitName", input);
+		System.out.println("Creating Unit");
 	}
 
 	/**
