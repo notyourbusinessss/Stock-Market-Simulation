@@ -40,21 +40,21 @@ public class Stock implements MarketObserver{
     }
 
     double getTrend(int Given){
-        int time = Math.max(0, Math.min(Given, this.trackedPrices.size() - 1));
-        double AVG = 0;
-        double trend = 0;
-        for(int i = time; i > 0; i--){
-            AVG += trackedPrices.get(i);
+        double sum = 0;
+        int index = 0;
+        index = (trackedPrices.size() - 1 - Given) ;
+        if(index < 0){
+            return 0.0;
         }
-        AVG = AVG/(time);
-        for(int i = time; i > 0; i--){
-            if(trackedPrices.get(i) > AVG){
-                trend += trackedPrices.get(i);
-            }else if(trackedPrices.get(i) < AVG){
-                trend -= trackedPrices.get(i);
-            }
+        System.out.println("\t\t getTrend at " + index + " : " + trackedPrices.get(index));
+
+        for(int i = trackedPrices.size() - 1 - Given; i < trackedPrices.size(); i++){
+            sum += trackedPrices.get(i);
         }
-        return trend;
+        if(sum == 0){
+            return 1;
+        }
+        return sum/Given;
     }
 
     int AVGAvalibleShares(){

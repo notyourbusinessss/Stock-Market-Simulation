@@ -26,7 +26,7 @@ public class Buyer extends Unit implements StockObserver {
      */
     int holding;
 
-    double Capital = 0;
+    double Capital = 1000;
 
 
     public Buyer(SimulationInput input) {
@@ -55,6 +55,10 @@ public class Buyer extends Unit implements StockObserver {
      * @return an integer representing hours
      */
     int getLookbackHours() {
+        if(false) {
+            return 5;
+        }
+
         int maxLookback = 730; // one month in hours
         int minLookback = 24; // one day in hours, duh...
 
@@ -72,34 +76,60 @@ public class Buyer extends Unit implements StockObserver {
      * @return
      */
     int makeDecision() {
-        int avalibleShares = stockMarket.getAvalibleShares();
         System.out.println("\t\t Make Decision");
-        double percent = stockMarket.getMarketTrend(getLookbackHours())/stockMarket.getCurrentPrice();
-        // Normalize market trend for weighting
-        double trendScore = percent * 100; // e.g. +5 for up 5%, -10 for down 10%
-        trendScore = Math.max(-100, Math.min(100, trendScore)); // clamp range
 
-        // Add randomness to simulate unpredictable human behavior
+        double percent = (-(stockMarket.getMarketTrend(getLookbackHours()) - stockMarket.getCurrentPrice()))/stockMarket.getCurrentPrice();
+        double trendScore = percent*100;
+
         int randomness = new Random().nextInt(21) - 10; // [-10, +10]
+        double confidence = 0; // Will be adjusted below
 
-        // Compute confidence score (tune weights as needed)
-        double confidence = (trendScore * 0.6)
-                + (baseTrust * 0.4)
-                + (activity * 0.3)
-                + randomness;
-        System.out.printf("%s -- Confidence: %.2f, Holding: %d, Capital %.2f%n", name, confidence -35, holding,Capital);
+        System.out.println("\t\t percentage: " + percent + "Market Trend : " + stockMarket.getMarketTrend(getLookbackHours()) + "Market score : " + trendScore );
+        if (trendScore <= -75) {
+            // Low trust panic sells, high trust tries to "buy the dip"
+            double sellPressure = (100 - baseTrust) * 0.6;  // Low trust → high sell pressure
+            double buyRescue = baseTrust * 0.3;             // High trust → might still buy
+            double activityBoost = activity * 0.2;
+            confidence = buyRescue - sellPressure + activityBoost + randomness;
+            System.out.println(name + " sees a CRASHING market");
+        }
+        else if (trendScore <= -30) { // 📉 DECLINING
+            confidence = ((50 - baseTrust) * 0.5) + (activity * 0.2) + randomness;
+            System.out.println(name + " sees a DECLINING market");
 
-        // Decision thresholds
-        if(confidence -35 < -10 && holding > 0){ //cannot sell something they do not have
+        }else if (trendScore <= 10) { // 😐 STABLE
+            // Market is calm — behavior is unpredictable with tiny lean from activity/trust
+            double trustBias = (baseTrust - 50) * 0.05;   // soft push if they lean very trusting
+            double activityBias = (activity - 50) * 0.05; // high activity might stir a little motion
+            confidence = randomness * 2 + trustBias + activityBias; // randomness dominates
+            System.out.println(name + " sees a STABLE market");
+        }else if (trendScore <= 50) { // 📈 RISING
+            // High trust = more likely to buy
+            // Activity encourages acting, but not as much as in booming
+            double trustBias = (baseTrust - 50) * 0.5;      // can swing ±25
+            double activityBoost = activity * 0.2;          // 0–20
+            confidence = trustBias + activityBoost + randomness;
+            System.out.println(name + " sees a RISING market");
+        }else { // 🚀 BOOMING
+            // Strong buyer bias — high trust buyers will really push to buy
+            double trustBias = baseTrust * 0.8;             // up to 80
+            double activityBoost = activity * 0.3;          // up to 30
+            confidence = trustBias + activityBoost + randomness;
+            System.out.println(name + " sees a BOOMING market");
+        }
 
+
+        System.out.printf("%s -- TrendScore: %.2f, Confidence: %.2f, Holding: %d, Capital: %.2f%n", name, trendScore, confidence, holding,Capital);
+
+        if (confidence < -10 && holding > 0) {
             return 1; // SELL
         }
-        if (confidence -35> 10 && avalibleShares > 0 && Capital > 0 ){
-            return 2;  // BUY
+        if (confidence > 10 && Capital>0) {
+            return 2; // BUY
         }
-        return 3;                       // HOLD
-
+        return 3; // HOLD
     }
+
     synchronized int getTransactionAmount(boolean selling) {
         // Base scaling factor derived from activity level
         int baseAmount = (int)(activity / 10);

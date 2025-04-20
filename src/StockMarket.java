@@ -9,6 +9,7 @@ import java.util.List;
  * The stock market is the middle ground of the interactions between the buyers and the Stock, here is where the buyers will buy or sell their stocks.
  */
 public class StockMarket extends Unit{
+    static int waiting = 100;
     Stock TrackedStock;
     private int avalibleShares;
     private List<MarketObserver> Stocks = new ArrayList<>();
@@ -77,7 +78,7 @@ public class StockMarket extends Unit{
         } else {
             // when supply == average supply, apply slight decay
             double decay = 1.0 / (avg == 0 ? MarketPrice : avg);
-            decay = decay * avalibleShares;
+            decay = decay * 10;
             System.out.println("\t\t decaying " + decay);
             MarketPrice -= decay;
         }
@@ -184,7 +185,7 @@ public class StockMarket extends Unit{
 
 
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(waiting);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
