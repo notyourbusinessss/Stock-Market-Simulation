@@ -6,14 +6,15 @@ import java.util.List;
 
 public class ArrowPanel extends JPanel {
     private JButton pauseButton;
-
-
     private JButton upButton;
     private JButton downButton;
     private JLabel valueLabel;
     private JLabel marketStateLabel;
+    private JLabel tickLabel;
+
     private StockMarket stock;
     private List<Double> priceHistory;
+    private int tick = 0;
 
     public ArrowPanel(StockMarket stockMarket) {
         this.stock = stockMarket;
@@ -24,34 +25,40 @@ public class ArrowPanel extends JPanel {
         // --- VALUE + BUTTON PANEL ON RIGHT ---
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setOpaque(false); // Transparent for black background
-        int fixedWidth = 120; // Adjust as needed
+        int fixedWidth = 120;
         rightPanel.setPreferredSize(new Dimension(fixedWidth, 0));
 
-
-        // Value label
+        // Labels
         valueLabel = new JLabel(String.format("%.2f", stock.MarketPrice), SwingConstants.CENTER);
         valueLabel.setFont(new Font("Arial", Font.BOLD, 24));
         valueLabel.setForeground(Color.WHITE);
 
-        // Market state label
         marketStateLabel = new JLabel("Market: Stable", SwingConstants.CENTER);
         marketStateLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         marketStateLabel.setForeground(Color.LIGHT_GRAY);
+
+        tickLabel = new JLabel(formatTick(tick), SwingConstants.CENTER);
+        tickLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        tickLabel.setForeground(Color.LIGHT_GRAY);
+
+        // Stack all labels vertically
+        JPanel labelPanel = new JPanel(new GridLayout(3, 1));
+        labelPanel.setOpaque(false);
+        labelPanel.add(valueLabel);
+        labelPanel.add(marketStateLabel);
+        labelPanel.add(tickLabel);
 
         // Buttons
         upButton = new JButton("↑");
         downButton = new JButton("↓");
         pauseButton = new JButton("Pause");
 
-        // Styling all buttons
         for (JButton button : new JButton[]{upButton, downButton, pauseButton}) {
             button.setBackground(Color.BLACK);
             button.setForeground(Color.WHITE);
             button.setFocusPainted(false);
             button.setBorderPainted(false);
         }
-
-
 
         pauseButton.addActionListener(e -> {
             stock.togglePause();
@@ -60,16 +67,12 @@ public class ArrowPanel extends JPanel {
 
         JPanel buttonPanel = new JPanel(new GridLayout(3, 1, 5, 5));
         buttonPanel.setBackground(Color.BLACK);
-
         buttonPanel.add(upButton);
         buttonPanel.add(downButton);
         buttonPanel.add(pauseButton);
 
-
-        rightPanel.add(valueLabel, BorderLayout.NORTH);
-        rightPanel.add(marketStateLabel, BorderLayout.CENTER);
+        rightPanel.add(labelPanel, BorderLayout.NORTH);
         rightPanel.add(buttonPanel, BorderLayout.SOUTH);
-
         add(rightPanel, BorderLayout.EAST);
 
         // BUTTON LOGIC
@@ -88,16 +91,16 @@ public class ArrowPanel extends JPanel {
             updateLabel();
             marketStateLabel.setText("Market: " + getMarketState());
 
-            // Only update history if market is not paused
             if (!stock.isPaused()) {
                 addPrice(stock.MarketPrice);
+                tick++;
+                tickLabel.setText(formatTick(tick));
             }
 
             repaint();
         }).start();
 
-
-        // GLOBAL BACKGROUND COLOR
+        // BACKGROUND COLOR
         setBackground(Color.BLACK);
     }
 
@@ -116,6 +119,19 @@ public class ArrowPanel extends JPanel {
     public void updateLabel(StockMarket stockMarket) {
         stock.MarketPrice = stockMarket.MarketPrice;
         updateLabel();
+    }
+
+    public void resetTick() {
+        tick = 0;
+        tickLabel.setText(formatTick(tick));
+    }
+
+    private String formatTick(int tick) {
+        int hours = tick % 24;
+        int totalDays = tick / 24;
+        int days = totalDays % 365;
+        int years = totalDays / 365;
+        return String.format("%d:%03d:%02d", years, days, hours);
     }
 
     private String getMarketState() {
@@ -150,8 +166,8 @@ public class ArrowPanel extends JPanel {
 
         int w = getWidth();
         int h = getHeight();
-        int paddingRight = 100; // reserve space for buttons and label
-        int paddingLeft = 40;   // space for reference value labels
+        int paddingRight = 100;
+        int paddingLeft = 40;
         int paddingBottom = 20;
         int paddingTop = 20;
         int graphWidth = w - paddingLeft - paddingRight;
@@ -161,9 +177,9 @@ public class ArrowPanel extends JPanel {
         double min = priceHistory.stream().min(Double::compare).orElse(0.0);
         double range = Math.max(max - min, 1);
 
-        // Draw horizontal reference lines
+        // Horizontal lines
         int numLines = 5;
-        g2.setColor(new Color(255, 255, 255, 50)); // semi-transparent white
+        g2.setColor(new Color(255, 255, 255, 50));
         g2.setFont(new Font("Arial", Font.PLAIN, 10));
         for (int i = 0; i <= numLines; i++) {
             int y = paddingTop + (graphHeight * i) / numLines;
@@ -174,9 +190,8 @@ public class ArrowPanel extends JPanel {
             g2.setColor(new Color(255, 255, 255, 50));
         }
 
-        // Draw the stock price graph
+        // Line graph
         int spacing = graphWidth / (priceHistory.size() - 1);
-
         for (int i = 0; i < priceHistory.size() - 1; i++) {
             int x1 = paddingLeft + i * spacing;
             int x2 = paddingLeft + (i + 1) * spacing;
