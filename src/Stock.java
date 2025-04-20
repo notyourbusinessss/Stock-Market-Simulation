@@ -16,7 +16,7 @@ public class Stock implements MarketObserver{
 
     /// let's make it a singleton yaaayyyyy
     private Stock(double currentPrice,int shares){
-        currentPrice = currentPrice;
+        this.currentPrice = currentPrice;
         trackedPrices = new ArrayList<>();
         trackedPrices.add(currentPrice);
         trackedShares = new ArrayList<>();

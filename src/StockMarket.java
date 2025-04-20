@@ -1,6 +1,7 @@
 import Skeleton.SimulationInput;
 import Skeleton.Unit;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class StockMarket extends Unit{
     Stock TrackedStock;
     private int avalibleShares;
     private List<MarketObserver> Stocks = new ArrayList<>();
-    double MarketPrice;
+    static double MarketPrice;
 
     /**
      * Time in which the simulation will run
@@ -65,11 +66,11 @@ public class StockMarket extends Unit{
         double avg = TrackedStock.AVGAvalibleShares();
         double percentage;
 
-        if (avalibleShares > avg) {
+        if (avalibleShares > avg + 1.10*avg) {
             percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1);
             System.out.println("\t\t avalible shares: " + avalibleShares + "; percentage: " + percentage);
             MarketPrice += MarketPrice * percentage;
-        } else if (avalibleShares < avg) {
+        } else if (avalibleShares < avg - 1.10*avg) {
             percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1);
             System.out.println("\t\t avalible shares: " + avalibleShares + "; percentage: " + percentage);
             MarketPrice += MarketPrice * percentage;
@@ -135,19 +136,22 @@ public class StockMarket extends Unit{
 
     @Override
     public void run() {
-        while (StockMarket.isOpen()) {
-            if(Now > Time){
-                open = false;
-                break;
-            }
-            if(Now == 0){
+
                 System.out.println("setting");
                 /// initialize everything
-                Buyer buyer1 = new Buyer(new SimulationInput(),"George -1-",(int)(this.avalibleShares*0.1),this,50,100);
+
+                JFrame frame = new JFrame("Arrow Panel Demo");
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.getContentPane().add(new ArrowPanel(this));
+                frame.setSize(200, 150);
+                frame.setLocationRelativeTo(null);
+                frame.setVisible(true);
+
+                Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
                 this.avalibleShares -= buyer1.holding;
-                Buyer buyer2 = new Buyer(new SimulationInput(),"Mark -2-",(int)(this.avalibleShares*0.1),this,50,100);
+                Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
                 this.avalibleShares -= buyer2.holding;
-                Thread A  = new Thread(buyer1);
+                Thread A = new Thread(buyer1);
                 Thread B = new Thread(buyer2);
                 A.start();
                 B.start();
@@ -157,10 +161,22 @@ public class StockMarket extends Unit{
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }*/
+
+        while (StockMarket.isOpen()) {
+            if(Now > Time){
+                open = false;
+                break;
             }else{
                 TrackedStock.printAsciiPriceGraph();
+                System.out.println("------------------------\n"+TrackedStock.getCurrentPrice() + " : " + TrackedStock.getTrend(1000) + ", " + TrackedStock.AVGAvalibleShares() + "\n------------------------\n");
+
+                //if()
+
                 updateStockPrice();
                 updateStock();
+
+                frame.repaint();
+
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
