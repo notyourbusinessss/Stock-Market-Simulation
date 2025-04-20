@@ -40,12 +40,24 @@ public class ArrowPanel extends JPanel {
         downButton = new JButton("↓");
         pauseButton = new JButton("Pause");
 
+        // Styling all buttons
+        for (JButton button : new JButton[]{upButton, downButton, pauseButton}) {
+            button.setBackground(Color.BLACK);
+            button.setForeground(Color.WHITE);
+            button.setFocusPainted(false);
+            button.setBorderPainted(false);
+        }
+
+
+
         pauseButton.addActionListener(e -> {
             stock.togglePause();
             pauseButton.setText(stock.isPaused() ? "Resume" : "Pause");
         });
 
         JPanel buttonPanel = new JPanel(new GridLayout(3, 1, 5, 5));
+        buttonPanel.setBackground(Color.BLACK);
+
         buttonPanel.add(upButton);
         buttonPanel.add(downButton);
         buttonPanel.add(pauseButton);
@@ -72,9 +84,15 @@ public class ArrowPanel extends JPanel {
         new Timer(StockMarket.waiting * 10, (ActionEvent e) -> {
             updateLabel();
             marketStateLabel.setText("Market: " + getMarketState());
-            addPrice(stock.MarketPrice);
+
+            // Only update history if market is not paused
+            if (!stock.isPaused()) {
+                addPrice(stock.MarketPrice);
+            }
+
             repaint();
         }).start();
+
 
         // GLOBAL BACKGROUND COLOR
         setBackground(Color.BLACK);
