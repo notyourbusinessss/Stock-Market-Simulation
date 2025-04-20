@@ -2,6 +2,7 @@ import Skeleton.SimulationInput;
 import Skeleton.Unit;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -57,13 +58,8 @@ public class StockMarket extends Unit{
         Stocks.add(TrackedStock);
     }
 
-    /**
-     * This will calculate the trend over a specified amount of time and give you the trend
-     * @return
-     */
     double getMarketTrend(int GoBack){
         return TrackedStock.getTrend(GoBack);
-
     }
     double getCurrentPrice(){
         return MarketPrice;
@@ -92,8 +88,8 @@ public class StockMarket extends Unit{
         ratio = Math.max(-maxChange, Math.min(maxChange, -ratio)); // Negate: less supply → increase price
 
         // Apply dampened change (only 5% of the allowed ratio)
-        double changeFactor = 0.05; // Adjust this to make it more/less sensitive
-        MarketPrice += MarketPrice * ratio * changeFactor;
+        double changeFactor = 0.05;
+        MarketPrice += MarketPrice * ratio * changeFactor * (avg > avalibleShares ? 1 : 3.5 );
 
         // Apply slight decay if no change
         if (Math.abs(delta) < avg * 0.05) {
@@ -108,33 +104,21 @@ public class StockMarket extends Unit{
         System.out.printf("\t\t Updated MarketPrice: %.2f\n", MarketPrice);
     }
 
-
-
     synchronized int getAvalibleShares(){
         return avalibleShares;
     }
 
-    //boolean canBuy(Buyer buyer){
-    //    if()
-    //}
-
     public void buy(int amount, Buyer buyer) {
-        // Should include something like:
         if (avalibleShares >= amount) {
             avalibleShares -= amount;
             buyer.addholding(amount);
             buyer.Capital -= amount*this.MarketPrice;
-            // update price, trend, etc.
         } else {
-            // prevent invalid buys
             amount = 0;
         }
     }
 
-
-
     void updateStock(){
-        /// make sure the stock only updates once per tick
         for (MarketObserver observer : Stocks){
             observer.updateMarketState(avalibleShares, MarketPrice);
         }
@@ -154,46 +138,97 @@ public class StockMarket extends Unit{
 
     }
 
-
     @Override
     public void run() {
+        System.out.println("setting");
+        ArrowPanel panel = new ArrowPanel(this);
+        SwingUtilities.invokeLater(() -> {
+            // Custom undecorated window with draggable title bar and close/minimize buttons
+            JFrame frame = new JFrame();
+            frame.setUndecorated(true);
 
-                System.out.println("setting");
-                /// initialize everything
-                ArrowPanel panel = new ArrowPanel(this);
-            SwingUtilities.invokeLater(() -> {
-                JFrame frame = new JFrame("Arrow Panel Demo");
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.getContentPane().add(panel);
-                frame.setSize(800, 400);
-                frame.setLocationRelativeTo(null);
-                frame.setVisible(true);
+            // Enable resizing on undecorated frame
+            ResizeListener resizeListener = new ResizeListener(frame);
+            frame.addMouseListener(resizeListener);
+            frame.addMouseMotionListener(resizeListener);
+
+            JPanel content = new JPanel(new BorderLayout());
+
+            JPanel titleBar = new JPanel(new BorderLayout());
+            titleBar.setBackground(Color.BLACK);
+            titleBar.setPreferredSize(new Dimension(800, 30));
+
+            JLabel title = new JLabel("  Stock Market Simulator");
+            title.setForeground(Color.WHITE);
+            title.setFont(new Font("Arial", Font.BOLD, 12));
+
+            JButton close = new JButton("✕");
+            close.setForeground(Color.WHITE);
+            close.setBackground(Color.BLACK);
+            close.setBorder(null);
+            close.setFocusPainted(false);
+            close.addActionListener(e -> System.exit(0));
+
+            JButton minimize = new JButton("—");
+            minimize.setForeground(Color.WHITE);
+            minimize.setBackground(Color.BLACK);
+            minimize.setBorder(null);
+            minimize.setFocusPainted(false);
+            minimize.addActionListener(e -> frame.setState(Frame.ICONIFIED));
+
+            JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 2));
+            buttons.setOpaque(false);
+            buttons.add(minimize);
+            buttons.add(close);
+
+            titleBar.add(title, BorderLayout.WEST);
+            titleBar.add(buttons, BorderLayout.EAST);
+
+            final Point[] clickPoint = {null};
+            titleBar.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mousePressed(java.awt.event.MouseEvent e) {
+                    clickPoint[0] = e.getPoint();
+                }
+            });
+            titleBar.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+                public void mouseDragged(java.awt.event.MouseEvent e) {
+                    Point p = frame.getLocation();
+                    frame.setLocation(p.x + e.getX() - clickPoint[0].x, p.y + e.getY() - clickPoint[0].y);
+                }
             });
 
+            content.add(titleBar, BorderLayout.NORTH);
+            content.add(panel, BorderLayout.CENTER);
+
+            // Create a border wrapper panel to simulate a black border
+            JPanel bordered = new JPanel(new BorderLayout());
+            bordered.setBackground(Color.BLACK);
+            bordered.setBorder(BorderFactory.createLineBorder(Color.BLACK, 5));
+            bordered.add(content, BorderLayout.CENTER);
+
+            frame.setContentPane(bordered);
+            frame.setSize(800, 400);
+            frame.setLocationRelativeTo(null);
+            frame.setResizable(true);
+            frame.setVisible(true);
+        });
 
         Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
-                this.avalibleShares -= buyer1.holding;
-                Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 100, 50);
-                this.avalibleShares -= buyer2.holding;
-                RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "Random -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
-                RandomBuyer buyer4 = new RandomBuyer(new SimulationInput(), "Random -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
-                Thread A = new Thread(buyer1);
-                Thread B = new Thread(buyer2);
-                Thread C = new Thread(buyer3);
-                Thread D = new Thread(buyer4);
-                A.start();
-                B.start();
-                C.start();
-                D.start();
-                /*try {
-                    A.join();
-                    B.join();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }*/
+        this.avalibleShares -= buyer1.holding;
+        Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 100, 50);
+        this.avalibleShares -= buyer2.holding;
+        RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "Random -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        RandomBuyer buyer4 = new RandomBuyer(new SimulationInput(), "Random -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        Thread A = new Thread(buyer1);
+        Thread B = new Thread(buyer2);
+        Thread C = new Thread(buyer3);
+        Thread D = new Thread(buyer4);
+        A.start();
+        B.start();
+        C.start();
+        D.start();
 
-        while ( true ||StockMarket.isOpen()) {
-
+        while (true || StockMarket.isOpen()) {
             try {
                 pauseLock.acquire();
                 pauseLock.release();
@@ -201,42 +236,25 @@ public class StockMarket extends Unit{
                 e.printStackTrace();
             }
 
-                TrackedStock.printAsciiPriceGraph();
-                System.out.println("------------------------\n"+TrackedStock.getCurrentPrice() + " : " + TrackedStock.getTrend(10) + ", " + TrackedStock.AVGAvalibleShares() + "\n------------------------\n");
+            TrackedStock.printAsciiPriceGraph();
+            System.out.println("------------------------\n" + TrackedStock.getCurrentPrice() + " : " + TrackedStock.getTrend(10) + ", " + TrackedStock.AVGAvalibleShares() + "\n------------------------\n");
 
-                //if()
+            updateStockPrice();
+            updateStock();
 
-                updateStockPrice();
-                updateStock();
+            SwingUtilities.invokeLater(panel::updateLabel);
 
-
-                SwingUtilities.invokeLater(panel::updateLabel);
-
-
-                try {
-                    Thread.sleep(waiting);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
+            try {
+                Thread.sleep(waiting);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-            System.out.println(this.TrackedStock + " : " + this.Now);
-
-            Now++;
-
-        System.out.println("stop");
-        TrackedStock.printAsciiPriceGraph();
-        return;
+        }
     }
 
-    /**
-     * Testing grounds
-     * @param args
-     */
     public static void main(String[] args) {
-       StockMarket stockMarket = new StockMarket(new SimulationInput(),1000,50.00,1000,0);
+        StockMarket stockMarket = new StockMarket(new SimulationInput(), 1000, 50.00, 1000, 0);
         Thread A = new Thread(stockMarket);
         A.start();
     }
-
 }
