@@ -4,16 +4,37 @@ import Skeleton.Unit;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 /**
  * The stock market is the middle ground of the interactions between the buyers and the Stock, here is where the buyers will buy or sell their stocks.
  */
 public class StockMarket extends Unit{
-    static int waiting = 1000;
+    static int waiting = 10;
     Stock TrackedStock;
     private int avalibleShares;
     private List<MarketObserver> Stocks = new ArrayList<>();
     double MarketPrice;
+
+    public static final Semaphore pauseLock = new Semaphore(1); // starts "unpaused"
+    private volatile boolean paused = false;
+
+    public void togglePause() {
+        if (paused) {
+            pauseLock.release();
+        } else {
+            try {
+                pauseLock.acquire();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        paused = !paused;
+    }
+
+    public boolean isPaused() {
+        return paused;
+    }
 
     /**
      * Time in which the simulation will run
@@ -169,10 +190,14 @@ public class StockMarket extends Unit{
                 }*/
 
         while ( true ||StockMarket.isOpen()) {
-            if(Now > Time){
-                open = false;
-                break;
-            }else{
+
+            try {
+                pauseLock.acquire();
+                pauseLock.release();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
                 TrackedStock.printAsciiPriceGraph();
                 System.out.println("------------------------\n"+TrackedStock.getCurrentPrice() + " : " + TrackedStock.getTrend(10) + ", " + TrackedStock.AVGAvalibleShares() + "\n------------------------\n");
 
@@ -195,7 +220,7 @@ public class StockMarket extends Unit{
             System.out.println(this.TrackedStock + " : " + this.Now);
 
             Now++;
-        }
+
         System.out.println("stop");
         TrackedStock.printAsciiPriceGraph();
         return;

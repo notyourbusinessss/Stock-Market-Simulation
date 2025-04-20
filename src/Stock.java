@@ -13,6 +13,10 @@ public class Stock implements MarketObserver{
     private ArrayList<Double> trackedPrices;
     private ArrayList<Integer> trackedShares;
 
+    public int getTrackedsize(){
+        return trackedPrices.size();
+    }
+
 
     /// let's make it a singleton yaaayyyyy
     private Stock(double currentPrice,int shares){
@@ -39,25 +43,21 @@ public class Stock implements MarketObserver{
         return trackedPrices.get(time);
     }
 
-    double getTrend(int Given){
-        double sum = 0;
-        int index = 0;
-        if(Given > trackedShares.size()){
-            index = trackedShares.size() - 1;
-        }
-        if(index< 0){
-            return 0;
-        }
-        System.out.println("\t\t getTrend at " + index + " : " + trackedPrices.get(index));
+    double getTrend(int given) {
+        int size = trackedPrices.size();
+        int start = Math.max(0, size - given); // start index
 
-        for(int i = index; i < trackedPrices.size(); i++){
+        if (size == 0) return 1; // fallback
+
+        double sum = 0;
+        for (int i = start; i < size; i++) {
             sum += trackedPrices.get(i);
         }
-        if(sum == 0){
-            return 1;
-        }
-        return sum/Given;
+
+        int count = size - start;
+        return (count > 0) ? (sum / count) : trackedPrices.get(size - 1);
     }
+
 
     int AVGAvalibleShares(){
         int sum = 0;

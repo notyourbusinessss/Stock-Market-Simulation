@@ -5,10 +5,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ArrowPanel extends JPanel {
+    private JButton pauseButton;
+
 
     private JButton upButton;
     private JButton downButton;
     private JLabel valueLabel;
+    private JLabel marketStateLabel;
     private StockMarket stock;
     private List<Double> priceHistory;
 
@@ -22,18 +25,34 @@ public class ArrowPanel extends JPanel {
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setOpaque(false); // Transparent for black background
 
+        // Value label
         valueLabel = new JLabel(String.format("%.2f", stock.MarketPrice), SwingConstants.CENTER);
         valueLabel.setFont(new Font("Arial", Font.BOLD, 24));
         valueLabel.setForeground(Color.WHITE);
 
+        // Market state label
+        marketStateLabel = new JLabel("Market: Stable", SwingConstants.CENTER);
+        marketStateLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        marketStateLabel.setForeground(Color.LIGHT_GRAY);
+
+        // Buttons
         upButton = new JButton("↑");
         downButton = new JButton("↓");
+        pauseButton = new JButton("Pause");
 
-        JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 5, 5));
+        pauseButton.addActionListener(e -> {
+            stock.togglePause();
+            pauseButton.setText(stock.isPaused() ? "Resume" : "Pause");
+        });
+
+        JPanel buttonPanel = new JPanel(new GridLayout(3, 1, 5, 5));
         buttonPanel.add(upButton);
         buttonPanel.add(downButton);
+        buttonPanel.add(pauseButton);
+
 
         rightPanel.add(valueLabel, BorderLayout.NORTH);
+        rightPanel.add(marketStateLabel, BorderLayout.CENTER);
         rightPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         add(rightPanel, BorderLayout.EAST);
@@ -50,8 +69,9 @@ public class ArrowPanel extends JPanel {
         });
 
         // AUTO UPDATE + GRAPH
-        new Timer(StockMarket.waiting, (ActionEvent e) -> {
+        new Timer(StockMarket.waiting * 10, (ActionEvent e) -> {
             updateLabel();
+            marketStateLabel.setText("Market: " + getMarketState());
             addPrice(stock.MarketPrice);
             repaint();
         }).start();
@@ -61,8 +81,10 @@ public class ArrowPanel extends JPanel {
     }
 
     private void addPrice(double price) {
-        if (priceHistory.size() >= 100)
-            priceHistory.remove(0);
+        if (priceHistory.size() >= 200)
+            for (int i = 0; i < 5; i++) {
+                priceHistory.remove(0);
+            }
         priceHistory.add(price);
     }
 
@@ -73,6 +95,26 @@ public class ArrowPanel extends JPanel {
     public void updateLabel(StockMarket stockMarket) {
         stock.MarketPrice = stockMarket.MarketPrice;
         updateLabel();
+    }
+
+    private String getMarketState() {
+        if (priceHistory.size() < 10) return "N/A";
+
+        double recent = priceHistory.get(priceHistory.size() - 1);
+        double past = priceHistory.get(priceHistory.size() - 10);
+        double diff = recent - past;
+        double percent = (diff / past) * 100;
+
+        if (percent < -10)
+            return "CRASHING";
+        else if (percent < -2)
+            return "Declining";
+        else if (percent > 10)
+            return "BOOMING";
+        else if (percent > 2)
+            return "Rising";
+        else
+            return "Stable";
     }
 
     @Override

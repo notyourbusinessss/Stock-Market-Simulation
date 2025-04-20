@@ -68,6 +68,23 @@ public class Buyer extends Unit implements StockObserver {
         return lookback;
     }
 
+    public double getTrendScore() {
+        if (stockMarket.TrackedStock.getTrackedsize() < 11) {
+            return 0; // Not enough data to calculate 10 steps back
+        }
+
+        double recent = stockMarket.TrackedStock.getPriceAt(stockMarket.TrackedStock.getTrackedsize() - 1);
+        double past = stockMarket.TrackedStock.getPriceAt(stockMarket.TrackedStock.getTrackedsize() - 10);
+
+        if (past == 0) return 100; // avoid division by zero
+
+        double diff = recent - past;
+        double percent = (diff / past) * 100; // Trend score
+
+        return percent;
+    }
+
+
     /**
      * The buyer depending on certain variables will make a decision and return
      * 1 : sell
@@ -77,19 +94,13 @@ public class Buyer extends Unit implements StockObserver {
      */
     int makeDecision() {
         System.out.println("\t\t Make Decision");
-
-        double currentPrice = stockMarket.getCurrentPrice();
-        double trend = stockMarket.getMarketTrend(getLookbackHours());
-
-// Calculate how far the current price is from the trend (as a % of the trend)
-        double percent = (currentPrice - trend) / trend;
-        double trendScore = percent * 100;
+        double trendScore = getTrendScore();
 
         int randomness = new Random().nextInt(21) - 10; // [-10, +10]
         double confidence = 0; // Will be adjusted below
 
 
-        System.out.println("\t\t percentage: " + percent + "Market Trend : " + stockMarket.getMarketTrend(getLookbackHours()) + "Market score : " + trendScore );
+        System.out.println("\t\t percentage: " + "???" + "Market Trend : " + stockMarket.getMarketTrend(getLookbackHours()) + "Market score : " + trendScore );
         if (trendScore <= -75) {
             // Low trust panic sells, high trust tries to "buy the dip"
             double sellPressure = (100 - baseTrust) * 0.6;  // Low trust → high sell pressure
