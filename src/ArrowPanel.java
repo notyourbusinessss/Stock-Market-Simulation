@@ -24,6 +24,9 @@ public class ArrowPanel extends JPanel {
         // --- VALUE + BUTTON PANEL ON RIGHT ---
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setOpaque(false); // Transparent for black background
+        int fixedWidth = 120; // Adjust as needed
+        rightPanel.setPreferredSize(new Dimension(fixedWidth, 0));
+
 
         // Value label
         valueLabel = new JLabel(String.format("%.2f", stock.MarketPrice), SwingConstants.CENTER);
