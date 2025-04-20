@@ -93,24 +93,24 @@ public class Buyer extends Unit implements StockObserver {
             confidence = buyRescue - sellPressure + activityBoost + randomness;
             System.out.println(name + " sees a CRASHING market");
         }
-        else if (trendScore <= -30) { // 📉 DECLINING
+        else if (trendScore <= -30) { // DECLINING
             confidence = ((50 - baseTrust) * 0.5) + (activity * 0.2) + randomness;
             System.out.println(name + " sees a DECLINING market");
 
-        }else if (trendScore <= 10) { // 😐 STABLE
+        }else if (trendScore <= 10) { // STABLE
             // Market is calm — behavior is unpredictable with tiny lean from activity/trust
             double trustBias = (baseTrust - 50) * 0.05;   // soft push if they lean very trusting
             double activityBias = (activity - 50) * 0.05; // high activity might stir a little motion
             confidence = randomness * 2 + trustBias + activityBias; // randomness dominates
             System.out.println(name + " sees a STABLE market");
-        }else if (trendScore <= 50) { // 📈 RISING
+        }else if (trendScore <= 50) { // RISING
             // High trust = more likely to buy
             // Activity encourages acting, but not as much as in booming
             double trustBias = (baseTrust - 50) * 0.5;      // can swing ±25
             double activityBoost = activity * 0.2;          // 0–20
             confidence = trustBias + activityBoost + randomness;
             System.out.println(name + " sees a RISING market");
-        }else { // 🚀 BOOMING
+        }else { // BOOMING
             // Strong buyer bias — high trust buyers will really push to buy
             double trustBias = baseTrust * 0.8;             // up to 80
             double activityBoost = activity * 0.3;          // up to 30
@@ -131,46 +131,54 @@ public class Buyer extends Unit implements StockObserver {
     }
 
     synchronized int getTransactionAmount(boolean selling) {
-        // Base scaling factor derived from activity level
-        int baseAmount = (int)(activity / 10);
-        baseAmount += new Random().nextInt(5) - 2; // ±2 randomness
-        baseAmount = Math.max(1, baseAmount); // Ensure minimum of 1
+        double percent = (-(stockMarket.getMarketTrend(getLookbackHours()) - stockMarket.getCurrentPrice())) / stockMarket.getCurrentPrice();
+        double trendScore = percent * 100;
 
-        switch (selling ? 1 : 2) {
-            case 1: { // SELL
-                if (holding <= 0) return 0;
+        double scalingFactor;
+        int baseAmount = (int)(activity / 10) + new Random().nextInt(5) - 2;
+        baseAmount = Math.max(1, baseAmount);
 
-                // Trust and activity determine how aggressively to sell
-                double trustFactor = (100 - baseTrust) / 100.0; // Low trust → more likely to sell
-                double activityFactor = activity / 100.0;
-                double sellFactor = trustFactor * 0.7 + activityFactor * 0.3;
-
-                // Add small randomness
-                sellFactor += (new Random().nextDouble() * 0.2) - 0.1;
-                sellFactor = Math.max(0.1, Math.min(1.0, sellFactor)); // Clamp to [10%, 100%]
-
-                int amountToSell = (int)(holding * sellFactor);
-                return Math.max(1, Math.min(amountToSell, holding)); // never exceed holding
-            }
-            case 2: { // BUY
-                int available = stockMarket.getAvalibleShares();
-                int maxPossible = (int)Math.floor(Capital/available);
-                if (available <= 0) return 0;
-
-                double trustFactor = baseTrust / 100.0; // High trust → buy more
-                double activityFactor = activity / 100.0;
-                double buyFactor = trustFactor * 0.7 + activityFactor * 0.3;
-
-                // Add small randomness
-                buyFactor += (new Random().nextDouble() * 0.2) - 0.1;
-                buyFactor = Math.max(0.1, Math.min(1.0, buyFactor)); // Clamp to [10%, 100%]
-
-                int amountToBuy = Math.min( maxPossible ,(int)(available * buyFactor));
-                return  Math.max(1, Math.min(amountToBuy, available));
-            }
+        if (trendScore <= -75) {
+            // Market is crashing
+            scalingFactor = selling
+                    ? (1.0 - baseTrust / 100.0) + (activity / 200.0)
+                    : baseTrust / 200.0;
+        } else if (trendScore <= -30) {
+            // Market is declining
+            scalingFactor = selling
+                    ? (1.0 - baseTrust / 150.0) + (activity / 300.0)
+                    : baseTrust / 300.0;
+        } else if (trendScore <= 10) {
+            // Market is stable
+            scalingFactor = 0.2 + (activity / 500.0);
+        } else if (trendScore <= 50) {
+            // Market is rising
+            scalingFactor = selling
+                    ? (1.0 - baseTrust / 200.0)
+                    : baseTrust / 150.0 + (activity / 300.0);
+        } else {
+            // Market is booming
+            scalingFactor = selling
+                    ? 0.1
+                    : baseTrust / 100.0 + activity / 200.0;
         }
-        return 0; // fallback
+
+        scalingFactor += (new Random().nextDouble() * 0.2) - 0.1;
+        scalingFactor = Math.max(0.1, Math.min(1.0, scalingFactor));
+
+        if (selling) {
+            if (holding <= 0) return 0;
+            int amountToSell = (int)(holding * scalingFactor);
+            return Math.max(1, Math.min(amountToSell, holding));
+        } else {
+            int available = stockMarket.getAvalibleShares();
+            if (available <= 0) return 0;
+            int maxPossible = (int)Math.floor(Capital / stockMarket.getCurrentPrice());
+            int amountToBuy = (int)(Math.min(maxPossible, available) * scalingFactor);
+            return Math.max(1, Math.min(amountToBuy, available));
+        }
     }
+
 
 
     /**

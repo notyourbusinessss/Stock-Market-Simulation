@@ -61,8 +61,8 @@ public class ArrowPanel extends JPanel {
     }
 
     private void addPrice(double price) {
-        //if (priceHistory.size() >= 10)
-        //    priceHistory.remove(0);
+        if (priceHistory.size() >= 100)
+            priceHistory.remove(0);
         priceHistory.add(price);
     }
 
@@ -83,27 +83,43 @@ public class ArrowPanel extends JPanel {
             return;
 
         Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         int w = getWidth();
         int h = getHeight();
         int paddingRight = 100; // reserve space for buttons and label
+        int paddingLeft = 40;   // space for reference value labels
         int paddingBottom = 20;
         int paddingTop = 20;
-        int graphWidth = w - paddingRight;
+        int graphWidth = w - paddingLeft - paddingRight;
         int graphHeight = h - paddingTop - paddingBottom;
 
         double max = priceHistory.stream().max(Double::compare).orElse(1.0);
         double min = priceHistory.stream().min(Double::compare).orElse(0.0);
         double range = Math.max(max - min, 1);
 
+        // Draw horizontal reference lines
+        int numLines = 5;
+        g2.setColor(new Color(255, 255, 255, 50)); // semi-transparent white
+        g2.setFont(new Font("Arial", Font.PLAIN, 10));
+        for (int i = 0; i <= numLines; i++) {
+            int y = paddingTop + (graphHeight * i) / numLines;
+            double value = max - (range * i / numLines);
+            g2.drawLine(paddingLeft, y, paddingLeft + graphWidth, y);
+            g2.setColor(Color.LIGHT_GRAY);
+            g2.drawString(String.format("%.2f", value), 2, y + 4);
+            g2.setColor(new Color(255, 255, 255, 50));
+        }
+
+        // Draw the stock price graph
         int spacing = graphWidth / (priceHistory.size() - 1);
 
         for (int i = 0; i < priceHistory.size() - 1; i++) {
-            int x1 = i * spacing;
-            int x2 = (i + 1) * spacing;
+            int x1 = paddingLeft + i * spacing;
+            int x2 = paddingLeft + (i + 1) * spacing;
 
-            int y1 = h - paddingBottom - (int) ((priceHistory.get(i) - min) / range * graphHeight);
-            int y2 = h - paddingBottom - (int) ((priceHistory.get(i + 1) - min) / range * graphHeight);
+            int y1 = paddingTop + (int) ((max - priceHistory.get(i)) / range * graphHeight);
+            int y2 = paddingTop + (int) ((max - priceHistory.get(i + 1)) / range * graphHeight);
 
             if (priceHistory.get(i + 1) > priceHistory.get(i)) {
                 g2.setColor(Color.GREEN);

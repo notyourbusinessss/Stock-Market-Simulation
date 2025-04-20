@@ -60,35 +60,33 @@ public class StockMarket extends Unit{
 
     synchronized void updateStockPrice() {
         System.out.println("\t\t updating");
-        if (avalibleShares == 0) {
-            return;
-        }
+        if (avalibleShares == 0) return;
 
         double avg = TrackedStock.AVGAvalibleShares();
-        double percentage;
+        double delta = avalibleShares - avg;
+        double ratio = delta / avg;
 
-        if (avalibleShares > avg + 0.05*avg) {
-            percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1);
-            System.out.println("\t\t avalible shares: " + avalibleShares + "; percentage: " + percentage);
-            MarketPrice += MarketPrice * percentage;
-        } else if (avalibleShares < avg - 0.05*avg) {
-            percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1);
-            System.out.println("\t\t avalible shares: " + avalibleShares + "; percentage: " + percentage);
-            MarketPrice += MarketPrice * percentage;
-        } else {
-            // when supply == average supply, apply slight decay
-            double decay = 1.0 / (avg == 0 ? MarketPrice : avg);
-            decay = decay * 10;
-            System.out.println("\t\t decaying " + decay);
+        // Cap the max change to ±10%
+        double maxChange = 0.1;
+        ratio = Math.max(-maxChange, Math.min(maxChange, -ratio)); // Negate: less supply → increase price
+
+        // Apply dampened change (only 5% of the allowed ratio)
+        double changeFactor = 0.05; // Adjust this to make it more/less sensitive
+        MarketPrice += MarketPrice * ratio * changeFactor;
+
+        // Apply slight decay if no change
+        if (Math.abs(delta) < avg * 0.05) {
+            double decay = Math.min(0.05, 1.0 / (avg == 0 ? 100 : avg)) * MarketPrice;
             MarketPrice -= decay;
         }
-        System.out.println("\t\t MarketPrice : " + MarketPrice);
-        // Clamp price to a minimum of 1 cent
+
         if (MarketPrice < 0.01) {
             MarketPrice = 0.01;
         }
 
+        System.out.printf("\t\t Updated MarketPrice: %.2f\n", MarketPrice);
     }
+
 
 
     synchronized int getAvalibleShares(){
