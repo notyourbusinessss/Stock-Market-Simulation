@@ -156,10 +156,13 @@ public class StockMarket extends Unit{
                 this.avalibleShares -= buyer1.holding;
                 Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
                 this.avalibleShares -= buyer2.holding;
+                RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "Random -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
                 Thread A = new Thread(buyer1);
                 Thread B = new Thread(buyer2);
+                Thread C = new Thread(buyer3);
                 A.start();
                 B.start();
+                C.start();
                 /*try {
                     A.join();
                     B.join();
@@ -173,7 +176,7 @@ public class StockMarket extends Unit{
                 break;
             }else{
                 TrackedStock.printAsciiPriceGraph();
-                System.out.println("------------------------\n"+TrackedStock.getCurrentPrice() + " : " + TrackedStock.getTrend(1000) + ", " + TrackedStock.AVGAvalibleShares() + "\n------------------------\n");
+                System.out.println("------------------------\n"+TrackedStock.getCurrentPrice() + " : " + TrackedStock.getTrend(10) + ", " + TrackedStock.AVGAvalibleShares() + "\n------------------------\n");
 
                 //if()
 

@@ -154,7 +154,7 @@ public class Buyer extends Unit implements StockObserver {
             }
             case 2: { // BUY
                 int available = stockMarket.getAvalibleShares();
-                int maxPossible = (int)(Capital/available);
+                int maxPossible = (int)Math.floor(Capital/available);
                 if (available <= 0) return 0;
 
                 double trustFactor = baseTrust / 100.0; // High trust → buy more
@@ -208,6 +208,9 @@ public class Buyer extends Unit implements StockObserver {
     public void run() {
         System.out.println("\t\t Running Buyer");
         while (StockMarket.isOpen()) {
+            if(Capital < 0 ){
+                Capital = 0;
+            }
             synchronized (this) {
                 while (!newpricing) {
                     try {

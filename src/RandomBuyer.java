@@ -12,9 +12,11 @@ public class RandomBuyer extends Buyer {
         Random rand = new Random();
         boolean decision = rand.nextBoolean(); // true = sell, false = buy
 
+        System.out.printf("%s -- Holding: %d, Capital: %.2f%n", name, holding,Capital);
+
         if (decision && holding > 0) {
             return 1; // SELL
-        } else if (!decision && stockMarket.getAvalibleShares() > 0) {
+        } else if (!decision && stockMarket.getAvalibleShares() > 0 && Capital > 0) {
             return 2; // BUY
         } else {
             return 3; // HOLD
@@ -28,7 +30,7 @@ public class RandomBuyer extends Buyer {
             int amount = rand.nextInt(holding + 1); // sell up to all holdings
             return amount;
         } else {
-            int maxAffordable = (int)(Capital / stockMarket.getCurrentPrice());
+            int maxAffordable = (int)Math.floor(Capital / stockMarket.getCurrentPrice());
             int maxAvailable = stockMarket.getAvalibleShares();
             int maxBuyable = Math.min(maxAffordable, maxAvailable);
             int amount = rand.nextInt(maxBuyable + 1); // buy up to affordable + available

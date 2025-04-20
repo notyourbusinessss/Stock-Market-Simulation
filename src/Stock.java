@@ -42,13 +42,15 @@ public class Stock implements MarketObserver{
     double getTrend(int Given){
         double sum = 0;
         int index = 0;
-        index = (trackedPrices.size() - 1 - Given) ;
-        if(index < 0){
-            return 0.0;
+        if(Given > trackedShares.size()){
+            index = trackedShares.size() - 1;
+        }
+        if(index< 0){
+            return 0;
         }
         System.out.println("\t\t getTrend at " + index + " : " + trackedPrices.get(index));
 
-        for(int i = trackedPrices.size() - 1 - Given; i < trackedPrices.size(); i++){
+        for(int i = index; i < trackedPrices.size(); i++){
             sum += trackedPrices.get(i);
         }
         if(sum == 0){
