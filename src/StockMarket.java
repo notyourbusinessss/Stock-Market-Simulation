@@ -53,6 +53,7 @@ public class StockMarket extends Unit{
     synchronized void sell(int amount,Buyer buyer){
         buyer.removeholding(amount);
         avalibleShares += amount;
+        buyer.Capital += amount*this.MarketPrice;
     }
 
     synchronized void updateStockPrice() {
@@ -95,10 +96,19 @@ public class StockMarket extends Unit{
     //    if()
     //}
 
-    void buy(int amount,Buyer buyer){
-        buyer.addholding(amount);
-        avalibleShares -= amount;
+    public void buy(int amount, Buyer buyer) {
+        // Should include something like:
+        if (avalibleShares >= amount) {
+            avalibleShares -= amount;
+            buyer.addholding(amount);
+            buyer.Capital -= amount*this.MarketPrice;
+            // update price, trend, etc.
+        } else {
+            // prevent invalid buys
+            amount = 0;
+        }
     }
+
 
 
     void updateStock(){
@@ -148,10 +158,11 @@ public class StockMarket extends Unit{
                     throw new RuntimeException(e);
                 }*/
             }else{
+                TrackedStock.printAsciiPriceGraph();
                 updateStockPrice();
                 updateStock();
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -162,6 +173,7 @@ public class StockMarket extends Unit{
             Now++;
         }
         System.out.println("stop");
+        TrackedStock.printAsciiPriceGraph();
         return;
     }
 

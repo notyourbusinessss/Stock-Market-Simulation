@@ -26,6 +26,8 @@ public class Buyer extends Unit implements StockObserver {
      */
     int holding;
 
+    double Capital = 0;
+
 
     public Buyer(SimulationInput input) {
         super(input);
@@ -88,13 +90,14 @@ public class Buyer extends Unit implements StockObserver {
                 + (baseTrust * 0.4)
                 + (activity * 0.3)
                 + randomness;
+        System.out.printf("%s -- Confidence: %.2f, Holding: %d, Capital %.2f%n", name, confidence, holding,Capital);
 
         // Decision thresholds
         if (confidence < -10 && holding > 0){ //cannot sell something they do not have
 
             return 1; // SELL
         }
-        if (confidence > 10 && avalibleShares > 0) {
+        if (confidence > 10 && avalibleShares > 0 && Capital > 0 ){
             return 2;  // BUY
         }
         return 3;                       // HOLD
@@ -124,6 +127,7 @@ public class Buyer extends Unit implements StockObserver {
             }
             case 2: { // BUY
                 int available = stockMarket.getAvalibleShares();
+                int maxPossible = (int)(Capital/available);
                 if (available <= 0) return 0;
 
                 double trustFactor = baseTrust / 100.0; // High trust → buy more
@@ -134,8 +138,8 @@ public class Buyer extends Unit implements StockObserver {
                 buyFactor += (new Random().nextDouble() * 0.2) - 0.1;
                 buyFactor = Math.max(0.1, Math.min(1.0, buyFactor)); // Clamp to [10%, 100%]
 
-                int amountToBuy = (int)(available * buyFactor);
-                return Math.max(1, Math.min(amountToBuy, available));
+                int amountToBuy = Math.min( maxPossible ,(int)(available * buyFactor));
+                return  Math.max(1, Math.min(amountToBuy, available));
             }
         }
         return 0; // fallback

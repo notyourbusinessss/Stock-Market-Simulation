@@ -95,4 +95,45 @@ public class Stock implements MarketObserver{
         }
         NotifyBuyers();
     }
+
+    public void printAsciiPriceGraph() {
+        if (trackedPrices.isEmpty()) {
+            System.out.println("No prices to display.");
+            return;
+        }
+
+        // Determine the price range
+        double max = trackedPrices.stream().max(Double::compareTo).get();
+        double min = trackedPrices.stream().min(Double::compareTo).get();
+
+        int height = 10; // Number of rows for the graph
+        int width = trackedPrices.size();
+
+        // Map each price to a vertical level
+        for (int level = height; level >= 0; level--) {
+            double threshold = min + ((max - min) * level / height);
+            StringBuilder row = new StringBuilder();
+            for (double price : trackedPrices) {
+                if (price >= threshold) {
+                    row.append(" * ");
+                } else {
+                    row.append("   ");
+                }
+            }
+            System.out.printf("%.2f |%s%n", threshold, row.toString());
+        }
+
+        // X-axis
+        System.out.print("      ");
+        for (int i = 0; i < width; i++) {
+            System.out.print("---");
+        }
+        System.out.println();
+        System.out.print("      ");
+        for (int i = 0; i < width; i++) {
+            System.out.printf("%2d ", i);
+        }
+        System.out.println();
+    }
+
 }
