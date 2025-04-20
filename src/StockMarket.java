@@ -12,7 +12,7 @@ public class StockMarket extends Unit{
     Stock TrackedStock;
     private int avalibleShares;
     private List<MarketObserver> Stocks = new ArrayList<>();
-    static double MarketPrice;
+    double MarketPrice;
 
     /**
      * Time in which the simulation will run
@@ -66,17 +66,18 @@ public class StockMarket extends Unit{
         double avg = TrackedStock.AVGAvalibleShares();
         double percentage;
 
-        if (avalibleShares > avg + 1.10*avg) {
+        if (avalibleShares > avg + 0.05*avg) {
             percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1);
             System.out.println("\t\t avalible shares: " + avalibleShares + "; percentage: " + percentage);
             MarketPrice += MarketPrice * percentage;
-        } else if (avalibleShares < avg - 1.10*avg) {
+        } else if (avalibleShares < avg - 0.05*avg) {
             percentage = ((double)(avalibleShares - TrackedStock.AVGAvalibleShares()) /(double)TrackedStock.AVGAvalibleShares())*(-1);
             System.out.println("\t\t avalible shares: " + avalibleShares + "; percentage: " + percentage);
             MarketPrice += MarketPrice * percentage;
         } else {
             // when supply == average supply, apply slight decay
             double decay = 1.0 / (avg == 0 ? MarketPrice : avg);
+            decay = decay * avalibleShares;
             System.out.println("\t\t decaying " + decay);
             MarketPrice -= decay;
         }
@@ -139,15 +140,18 @@ public class StockMarket extends Unit{
 
                 System.out.println("setting");
                 /// initialize everything
-
+                ArrowPanel panel = new ArrowPanel(this);
+            SwingUtilities.invokeLater(() -> {
                 JFrame frame = new JFrame("Arrow Panel Demo");
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.getContentPane().add(new ArrowPanel(this));
+                frame.getContentPane().add(panel);
                 frame.setSize(200, 150);
                 frame.setLocationRelativeTo(null);
                 frame.setVisible(true);
+            });
 
-                Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+
+        Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
                 this.avalibleShares -= buyer1.holding;
                 Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
                 this.avalibleShares -= buyer2.holding;
@@ -175,7 +179,9 @@ public class StockMarket extends Unit{
                 updateStockPrice();
                 updateStock();
 
-                frame.repaint();
+
+                SwingUtilities.invokeLater(panel::updateLabel);
+
 
                 try {
                     Thread.sleep(1000);

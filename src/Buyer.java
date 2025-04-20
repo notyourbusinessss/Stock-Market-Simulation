@@ -87,14 +87,14 @@ public class Buyer extends Unit implements StockObserver {
                 + (baseTrust * 0.4)
                 + (activity * 0.3)
                 + randomness;
-        System.out.printf("%s -- Confidence: %.2f, Holding: %d, Capital %.2f%n", name, confidence -55, holding,Capital);
+        System.out.printf("%s -- Confidence: %.2f, Holding: %d, Capital %.2f%n", name, confidence -35, holding,Capital);
 
         // Decision thresholds
-        if(confidence -55 < -10 && holding > 0){ //cannot sell something they do not have
+        if(confidence -35 < -10 && holding > 0){ //cannot sell something they do not have
 
             return 1; // SELL
         }
-        if (confidence -55> 10 && avalibleShares > 0 && Capital > 0 ){
+        if (confidence -35> 10 && avalibleShares > 0 && Capital > 0 ){
             return 2;  // BUY
         }
         return 3;                       // HOLD

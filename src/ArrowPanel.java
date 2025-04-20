@@ -20,47 +20,45 @@ public class ArrowPanel extends JPanel {
 
     public ArrowPanel(StockMarket stockMarket) {
         this.stock = stockMarket;
-        currentValue = stockMarket.MarketPrice;
 
-        // Layout for the buttons and label
         setLayout(new BorderLayout(10, 10));
 
-        // Initialize label
-        valueLabel = new JLabel(String.valueOf(currentValue), SwingConstants.CENTER);
+        valueLabel = new JLabel(String.format("%.2f", stock.MarketPrice), SwingConstants.CENTER);
         valueLabel.setFont(new Font("Arial", Font.BOLD, 24));
 
-        // Initialize buttons
         upButton = new JButton("↑");
         downButton = new JButton("↓");
 
-        // Panel to hold buttons
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 5, 5));
         buttonPanel.add(upButton);
         buttonPanel.add(downButton);
 
-        // Add components
         add(valueLabel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.EAST);
 
-        // Button listeners
-        upButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                currentValue++;
-                updateLabel();
-            }
+        upButton.addActionListener(e -> {
+            stock.MarketPrice++;
+            updateLabel();
         });
 
-        downButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                currentValue--;
-                updateLabel();
-            }
+        downButton.addActionListener(e -> {
+            stock.MarketPrice--;
+            updateLabel();
         });
+
+        // 🔁 Auto-refresh display every 100ms
+        new Timer(100, e -> updateLabel()).start();
     }
+
 
     public void updateLabel() {
-        valueLabel.setText(String.valueOf(currentValue));
+        valueLabel.setText(String.format("%.2f", stock.MarketPrice));
     }
+    public void updateLabel(StockMarket stockMarket) {
+        stock.MarketPrice = stockMarket.MarketPrice;
+        valueLabel.setText(String.format("%.2f", stock.MarketPrice));
+    }
+
 
     // For demonstration
 //    public static void main(String[] args) {
