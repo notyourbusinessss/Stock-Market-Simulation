@@ -78,11 +78,16 @@ public class Buyer extends Unit implements StockObserver {
     int makeDecision() {
         System.out.println("\t\t Make Decision");
 
-        double percent = (-(stockMarket.getMarketTrend(getLookbackHours()) - stockMarket.getCurrentPrice()))/stockMarket.getCurrentPrice();
-        double trendScore = percent*100;
+        double currentPrice = stockMarket.getCurrentPrice();
+        double trend = stockMarket.getMarketTrend(getLookbackHours());
+
+// Calculate how far the current price is from the trend (as a % of the trend)
+        double percent = (currentPrice - trend) / trend;
+        double trendScore = percent * 100;
 
         int randomness = new Random().nextInt(21) - 10; // [-10, +10]
         double confidence = 0; // Will be adjusted below
+
 
         System.out.println("\t\t percentage: " + percent + "Market Trend : " + stockMarket.getMarketTrend(getLookbackHours()) + "Market score : " + trendScore );
         if (trendScore <= -75) {

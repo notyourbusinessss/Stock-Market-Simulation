@@ -9,7 +9,7 @@ import java.util.List;
  * The stock market is the middle ground of the interactions between the buyers and the Stock, here is where the buyers will buy or sell their stocks.
  */
 public class StockMarket extends Unit{
-    static int waiting = 100;
+    static int waiting = 1000;
     Stock TrackedStock;
     private int avalibleShares;
     private List<MarketObserver> Stocks = new ArrayList<>();
@@ -168,7 +168,7 @@ public class StockMarket extends Unit{
                     throw new RuntimeException(e);
                 }*/
 
-        while (StockMarket.isOpen()) {
+        while ( true ||StockMarket.isOpen()) {
             if(Now > Time){
                 open = false;
                 break;
