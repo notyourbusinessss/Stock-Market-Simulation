@@ -87,13 +87,20 @@ public class StockMarket extends Unit{
     }
 
 
-    int getAvalibleShares(){
+    synchronized int getAvalibleShares(){
         return avalibleShares;
     }
+
+    //boolean canBuy(Buyer buyer){
+    //    if()
+    //}
+
     void buy(int amount,Buyer buyer){
         buyer.addholding(amount);
         avalibleShares -= amount;
     }
+
+
     void updateStock(){
         /// make sure the stock only updates once per tick
         for (MarketObserver observer : Stocks){
@@ -143,6 +150,12 @@ public class StockMarket extends Unit{
             }else{
                 updateStockPrice();
                 updateStock();
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
             }
             System.out.println(this.TrackedStock + " : " + this.Now);
 
@@ -157,7 +170,7 @@ public class StockMarket extends Unit{
      * @param args
      */
     public static void main(String[] args) {
-       StockMarket stockMarket = new StockMarket(new SimulationInput(),100,50.00,1000,0);
+       StockMarket stockMarket = new StockMarket(new SimulationInput(),1000,50.00,1000,0);
         Thread A = new Thread(stockMarket);
         A.start();
     }

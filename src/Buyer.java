@@ -70,6 +70,10 @@ public class Buyer extends Unit implements StockObserver {
      * @return
      */
     int makeDecision() {
+        int avalibleShares = stockMarket.getAvalibleShares();
+
+
+
         System.out.println("\t\t Make Decision");
         double percent = stockMarket.getMarketTrend(getLookbackHours())/stockMarket.getCurrentPrice();
         // Normalize market trend for weighting
@@ -90,13 +94,13 @@ public class Buyer extends Unit implements StockObserver {
 
             return 1; // SELL
         }
-        if (confidence > 10) {
+        if (confidence > 10 && avalibleShares > 0) {
             return 2;  // BUY
         }
         return 3;                       // HOLD
 
     }
-    int getTransactionAmount(boolean selling) {
+    synchronized int getTransactionAmount(boolean selling) {
         // Base scaling factor derived from activity level
         int baseAmount = (int)(activity / 10);
         baseAmount += new Random().nextInt(5) - 2; // ±2 randomness
