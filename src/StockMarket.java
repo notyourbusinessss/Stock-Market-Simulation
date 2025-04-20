@@ -165,7 +165,7 @@ public class StockMarket extends Unit{
                 JFrame frame = new JFrame("Arrow Panel Demo");
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.getContentPane().add(panel);
-                frame.setSize(200, 150);
+                frame.setSize(800, 400);
                 frame.setLocationRelativeTo(null);
                 frame.setVisible(true);
             });
