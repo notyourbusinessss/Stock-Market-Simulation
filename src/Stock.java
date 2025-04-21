@@ -7,6 +7,7 @@ import java.util.List;
  * Stock is also an observer of the market
  */
 public class Stock implements MarketObserver{
+    private final int totalIssued;
     private static Stock instance = null;
     private List<StockObserver> observers = new ArrayList<>();
     private double currentPrice;
@@ -21,6 +22,7 @@ public class Stock implements MarketObserver{
 
     /// let's make it a singleton yaaayyyyy
     private Stock(double currentPrice,int shares){
+        this.totalIssued = shares;
         this.currentPrice = currentPrice;
         trackedPrices = new ArrayList<>();
         trackedPrices.add(currentPrice);
@@ -59,6 +61,8 @@ public class Stock implements MarketObserver{
         int count = size - start;
         return (count > 0) ? (sum / count) : trackedPrices.get(size - 1);
     }
+
+    public int getIssuedShares() { return totalIssued; }
 
 
     int AVGAvalibleShares(){
@@ -141,6 +145,6 @@ public class Stock implements MarketObserver{
     }
 
     public int getTotalShares() {
-        return trackedShares.getLast();
+        return startShares;
     }
 }

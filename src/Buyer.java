@@ -93,56 +93,33 @@ public class Buyer extends Unit implements StockObserver {
      * @return
      */
     int makeDecision() {
-        System.out.println("\t\t Make Decision");
-        double trendScore = getTrendScore();
+        Random rng = new Random();
+        double trendPct = getTrendScore();              // already a %
+        int    noise    = rng.nextInt(21) - 10;         // –10 … +10
+        double confidence;
 
-        int randomness = new Random().nextInt(21) - 10; // [-10, +10]
-        double confidence = 0; // Will be adjusted below
-
-        trendScore *= 100;
-        System.out.println("\t\t percentage: " + "???" + "Market Trend : " + stockMarket.getMarketTrend(getLookbackHours()) + "Market score : " + trendScore );
-        if (trendScore <= -75) {
-            // Low trust panic sells, high trust tries to "buy the dip"
-            double sellPressure = (100 - baseTrust) * 0.6;  // Low trust → high sell pressure
-            double buyRescue = baseTrust * 0.3;             // High trust → might still buy
-            double activityBoost = activity * 0.2;
-            confidence = buyRescue - sellPressure + activityBoost + randomness;
-            System.out.println(name + " sees a CRASHING market");
-        }
-        else if (trendScore <= -30) { // DECLINING
-            confidence = ((50 - baseTrust) * 0.5) + (activity * 0.2) + randomness;
-            System.out.println(name + " sees a DECLINING market");
-
-        }else if (trendScore <= 10) { // STABLE
-            // Market is calm — behavior is unpredictable with tiny lean from activity/trust
-            double trustBias = (baseTrust - 50) * 0.05;   // soft push if they lean very trusting
-            double activityBias = (activity - 50) * 0.05; // high activity might stir a little motion
-            confidence = 2 + trustBias  - randomness*activityBias; // randomness dominates
-            System.out.println(name + " sees a STABLE market");
-        }else if (trendScore <= 50) { // RISING
-            // High trust = more likely to buy
-            // Activity encourages acting, but not as much as in booming
-            double trustBias = (baseTrust - 50) * 0.5;      // can swing ±25
-            double activityBoost = activity * 0.2;          // 0–20
-            confidence = trustBias + activityBoost + randomness;
-            System.out.println(name + " sees a RISING market");
-        }else { // BOOMING
-            // Strong buyer bias — high trust buyers will really push to buy
-            double trustBias = baseTrust * 0.8;             // up to 80
-            double activityBoost = activity * -0.3;          // up to 30
-            confidence = trustBias + activityBoost + randomness;
-            System.out.println(name + " sees a BOOMING market");
+        if (trendPct <= -5) {                            // CRASHING
+            double panic     = (100 - baseTrust) * 0.5;
+            double buyDip    =  baseTrust      * 0.2;
+            confidence = -40 - panic + buyDip + activity * 0.2 + noise;
+        } else if (trendPct <= -1) {                     // DECLINING
+            confidence = -15 + (50 - baseTrust) * 0.3
+                    + activity * 0.1 + noise;
+        } else if (trendPct < 1) {                       // STABLE
+            confidence = (activity - 50) * 0.05
+                    + (baseTrust - 50) * 0.05
+                    + noise / 2.0;
+        } else if (trendPct <= 5) {                      // RISING
+            confidence = 15 + (baseTrust - 50) * 0.3
+                    + activity * 0.1 + noise;
+        } else {                                         // BOOMING
+            confidence = 40 + baseTrust * 0.5
+                    - activity * 0.1 + noise;
         }
 
-
-        System.out.printf("%s -- TrendScore: %.2f, Confidence: %.2f, Holding: %d, Capital: %.2f%n", name, trendScore, confidence, holding,Capital);
-
-        if (confidence < -10 && holding > 0) {
-            return 1; // SELL
-        }
-        if (confidence > 10 && Capital  > 0) {
-            return 2; // BUY
-        }
+        // Decision gate
+        if (confidence < -10 && holding > 0)                                 return 1; // SELL
+        if (confidence >  10 && Capital >= stockMarket.getCurrentPrice())    return 2; // BUY
         return 3; // HOLD
     }
 

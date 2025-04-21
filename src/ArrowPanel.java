@@ -108,7 +108,7 @@ public class ArrowPanel extends JPanel {
         add(rightPanel, BorderLayout.EAST);
         setBackground(new Color(15, 15, 15));
 
-        new Timer(StockMarket.waiting * 10, (ActionEvent e) -> {
+        new Timer(StockMarket.waiting , (ActionEvent e) -> {
             updateLabel();
             marketStateLabel.setText("Market: " + getMarketState());
 
@@ -206,7 +206,7 @@ public class ArrowPanel extends JPanel {
         g2.setFont(new Font("Arial", Font.PLAIN, 10));
         g2.setColor(new Color(255, 255, 255, 50));
         for (int i = 0; i <= 5; i++) {
-            int y = paddingTop + (graphHeight * i) / 5;
+            int y = paddingTop + (graphHeight * i) /5;
             double val = max - range * i / 5;
             g2.drawLine(paddingLeft, y, paddingLeft + graphWidth, y);
             g2.setColor(Color.LIGHT_GRAY);

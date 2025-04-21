@@ -26,6 +26,8 @@ public class StockMarket extends Unit {
     private boolean wasSell = false;
     private final Random rng = new Random();
 
+    SimulationInput input;
+
     int Time;
     static int Now;
     static boolean open = true;
@@ -94,78 +96,32 @@ public class StockMarket extends Unit {
         }
     }
 
-    synchronized void updateStockPrice() {
+    private void updateStockPrice() {
         System.out.println("\t\t[Updating Stock Price]");
 
-        double avg = TrackedStock.AVGAvalibleShares();
-        double delta = avg - avalibleShares;
-        double ratio = delta / avg;
+        // 1.  Net order flow during the last tick
+        int netShares = AmountBought - AmountSold;      // +ve = buying pressure
+        int issued    = TrackedStock.getIssuedShares(); // immutable float size
 
-        double maxRatio = 0.1;
-        double baseChangeFactor = 0.03;
-        double priceChange = 0;
+        // 2.  Convert order flow to a –1 … +1 proportion
+        double proportion = (double) netShares / issued;
 
-        int totalShares = TrackedStock.getTotalShares(); // Make sure this method exists in your Stock class
+        // 3.  Smooth, bounded price‑impact curve
+        double elasticity = 5.0;                        // volatility dial
+        double delta      = MarketPrice * Math.tanh(elasticity * proportion);
 
-        if (wasBuy && !wasSell) {
-            // Volume-adjusted buying impact
-            double volumeFactor = Math.min(1.0, (double) AmountBought / (totalShares * 0.05));
-            double directionalMultiplier = 0.75 * volumeFactor;
-            double cappedRatio = Math.max(-maxRatio, Math.min(maxRatio, ratio));
-            priceChange = cappedRatio * baseChangeFactor * directionalMultiplier;
-        } else if (!wasBuy && wasSell) {
-            // Volume-adjusted selling impact
-            double volumeFactor = Math.min(3.0, (double) AmountSold / (totalShares * 0.05));
-            double directionalMultiplier = 4.0 * volumeFactor;
-            double cappedRatio = Math.max(-maxRatio, Math.min(maxRatio, ratio));
-            priceChange = cappedRatio * baseChangeFactor * directionalMultiplier;
-        } else if (!wasBuy && !wasSell) {
-            // Idle → random drift
-            double noise = (rng.nextDouble() * 0.01) - 0.005; // [-0.005, 0.005]
-            System.out.printf("\t\t[Random Drift] %.4f\n", noise);
-            priceChange = noise;
-        }
+        // 4.  Apply and clamp
+        MarketPrice = Math.max(0.01,
+                Math.min(1_000.0, MarketPrice + delta));
 
-        // === Price Resistance and Dampening ===
-        double resistance = Math.max(0.1, 1.0 - (MarketPrice / 500.0));
-        priceChange *= resistance;
+        // 5.  Logging & reset
+        System.out.printf(
+                "\t\tNet %+d (%.4f)  Δ%.4f  →  %.2f%n",
+                netShares, proportion, delta, MarketPrice);
 
-        if (priceChange > 0) {
-            priceChange *= Math.pow(0.97, MarketPrice / 10.0);  // Reduce gain as price grows
-        }
-
-        // === Clamp maximum price change per tick ===
-        double maxTickChange = 0.02; // ±2%
-        priceChange = Math.max(-maxTickChange, Math.min(maxTickChange, priceChange));
-
-        // === Apply price change ===
-        MarketPrice += MarketPrice * priceChange;
-
-        // === Idle decay if price is too high ===
-        if (!wasBuy && !wasSell && MarketPrice > 20) {
-            double decay = MarketPrice * 0.002;
-            MarketPrice -= decay;
-            System.out.printf("\t\t[Idle Decay] -%.4f\n", decay);
-        }
-
-        // === Floor & Cap ===
-        if (MarketPrice < 0.01) {
-            MarketPrice = 0.01;
-        } else if (MarketPrice > 1000.00) {
-            MarketPrice = 500.00;
-        }
-
-        // === Debug ===
-        System.out.printf("\t\t Final Price Change: %.4f\n", priceChange);
-        System.out.printf("\t\t Updated Market Price: %.2f\n", MarketPrice);
-
-        // === Reset trade state ===
-        wasBuy = false;
-        wasSell = false;
-        AmountSold = 0;
         AmountBought = 0;
+        AmountSold   = 0;
     }
-
 
 
     synchronized int getAvalibleShares() {
@@ -249,7 +205,7 @@ public class StockMarket extends Unit {
     }
 
     public static void main(String[] args) {
-        StockMarket stockMarket = new StockMarket(new SimulationInput(), 10000, 50.00, 1000, 0);
+        StockMarket stockMarket = new StockMarket(new SimulationInput(), 1000000, 60, 1000, 0);
         Thread A = new Thread(stockMarket);
         A.start();
     }
