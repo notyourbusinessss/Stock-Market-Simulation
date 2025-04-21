@@ -7,7 +7,7 @@ public class CustomWindowPanel extends JPanel {
     private boolean isFullscreen = false;
     private Rectangle windowedBounds; // Store window size before going fullscreen
 
-    public CustomWindowPanel(JPanel innerContent, boolean exitOnClose) {
+    public CustomWindowPanel(JPanel innerContent, boolean exitOnClose,String titleGiven) {
         super(new BorderLayout());
         this.exitOnClose = exitOnClose;
         // === Title Bar ===
@@ -15,7 +15,7 @@ public class CustomWindowPanel extends JPanel {
         titleBar.setBackground(Color.BLACK);
         titleBar.setPreferredSize(new Dimension(800, 30));
 
-        JLabel title = new JLabel("  Stock Market Simulator");
+        JLabel title = new JLabel(titleGiven);
         title.setForeground(Color.WHITE);
         title.setFont(new Font("Arial", Font.BOLD, 12));
 

@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
@@ -24,8 +25,12 @@ public class SimulatedTradePanel extends JPanel {
 
         setLayout(new GridLayout(8, 1, 5, 5));
         setBackground(Color.BLACK);
-        setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.WHITE), "Simulated Trading"));
+        TitledBorder border = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.WHITE),
+                "Simulated Trading");
 
+        border.setTitleColor(Color.WHITE);   // title text → white
+        setBorder(border);
         priceLabel = new JLabel();
         sharesLabel = new JLabel();
         profitLabel = new JLabel();
@@ -39,6 +44,12 @@ public class SimulatedTradePanel extends JPanel {
 
         buyButton.addActionListener(this::simulateBuy);
         sellButton.addActionListener(this::simulateSell);
+        buyButton.setBackground(Color.DARK_GRAY);
+        sellButton.setBackground(Color.DARK_GRAY);
+        buyButton.setForeground(Color.WHITE);
+        sellButton.setForeground(Color.WHITE);
+        buyButton.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
+        sellButton.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
 
         for (JLabel label : new JLabel[]{priceLabel, sharesLabel, profitLabel, cashLabel}) {
             label.setForeground(Color.WHITE);
@@ -49,8 +60,38 @@ public class SimulatedTradePanel extends JPanel {
         add(sharesLabel);
         add(cashLabel);
         add(profitLabel);
-        add(new JLabel("Amount to simulate:", SwingConstants.CENTER));
-        add(amountField);
+
+// Create a horizontal row panel
+        JPanel amountRow = new JPanel();
+        amountRow.setLayout(new BoxLayout(amountRow, BoxLayout.X_AXIS));
+        amountRow.setOpaque(false); // preserve black background
+        amountRow.setAlignmentX(Component.CENTER_ALIGNMENT); // center align inside parent
+
+        JLabel amountLabel = new JLabel("Amount to simulate:");
+        amountLabel.setForeground(Color.WHITE);
+
+// Size and style the input field
+        amountField.setPreferredSize(new Dimension(60, 24));
+        amountField.setMaximumSize(new Dimension(60, 24));
+        amountField.setBackground(Color.WHITE);
+        amountField.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        amountField.setBackground(Color.BLACK);
+        amountField.setForeground(Color.WHITE);
+// Center the text inside the field (optional)
+        amountField.setHorizontalAlignment(JTextField.CENTER);
+
+// Add padding and components
+        amountRow.add(Box.createHorizontalGlue());
+        amountRow.add(amountLabel);
+        amountRow.add(Box.createHorizontalStrut(10));
+        amountRow.add(amountField);
+        amountRow.add(Box.createHorizontalGlue());
+
+// Add the whole row to your panel
+        add(amountRow);
+
+
+
         add(buyButton);
         add(sellButton);
     }

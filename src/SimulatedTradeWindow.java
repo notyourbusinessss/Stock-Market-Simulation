@@ -7,7 +7,7 @@ public class SimulatedTradeWindow {
     public SimulatedTradeWindow(StockMarket stockMarket) {
         SimulatedTradePanel tradePanel = new SimulatedTradePanel(stockMarket);
 
-        CustomWindowPanel windowPanel = new CustomWindowPanel(tradePanel,false);
+        CustomWindowPanel windowPanel = new CustomWindowPanel(tradePanel,false,"Simulated Trading Window");
 
         frame = new JFrame("Simulated Trading Window");
         frame.setContentPane(windowPanel);

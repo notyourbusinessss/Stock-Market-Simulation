@@ -196,11 +196,11 @@ public class StockMarket extends Unit {
 
         SwingUtilities.invokeLater(() -> {
             // === Window 1: Market Graph ===
-            CustomWindowPanel marketWindow = new CustomWindowPanel(arrowPanel,true);
+            CustomWindowPanel marketWindow = new CustomWindowPanel(arrowPanel,true,"Stock Market");
             marketWindow.showWindow(); // This shows your main stock window
 
             // === Window 2: Simulated Trading ===
-            CustomWindowPanel simTradeWindow = new CustomWindowPanel(simPanel,false);
+            CustomWindowPanel simTradeWindow = new CustomWindowPanel(simPanel,false,"Simulated Trading Window");
             simTradeWindow.showWindow(); // This shows your simulated trading panel
         });
 
