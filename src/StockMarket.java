@@ -8,7 +8,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 
+
 public class StockMarket extends Unit {
+    int AmountSold = 0;
+    int AmountBought = 0;
+
     static int waiting = 10;
     Stock TrackedStock;
     private int avalibleShares;
@@ -75,8 +79,10 @@ public class StockMarket extends Unit {
             buyer.addholding(amount);
             buyer.Capital -= amount * this.MarketPrice;
             wasBuy = true;
+            AmountBought += amount;
         }
     }
+
 
     public synchronized void sell(int amount, Buyer buyer) {
         if (amount > 0) {
@@ -84,6 +90,7 @@ public class StockMarket extends Unit {
             avalibleShares += amount;
             buyer.Capital += amount * this.MarketPrice;
             wasSell = true;
+            AmountSold += amount;
         }
     }
 
@@ -99,18 +106,19 @@ public class StockMarket extends Unit {
 
         double priceChange = 0;
 
+        int totalShares = TrackedStock.getTotalShares(); // You may need to implement this if it's not there
+
         if (wasBuy && !wasSell) {
-            // Buyers pushing price up slowly
-            double directionalMultiplier = 0.5;
+            double volumeFactor = Math.min(1.5, (double) AmountBought / (totalShares * 0.05)); // Cap to avoid huge jumps
+            double directionalMultiplier = 1 * volumeFactor;
             double cappedRatio = Math.max(-maxRatio, Math.min(maxRatio, ratio));
             priceChange = cappedRatio * baseChangeFactor * directionalMultiplier;
         } else if (!wasBuy && wasSell) {
-            // Sellers causing price drop more aggressively
-            double directionalMultiplier = 2.5;
+            double volumeFactor = Math.min(3.0, (double) AmountSold / (totalShares * 0.05)); // Sharper drop allowed
+            double directionalMultiplier = 4 * volumeFactor;
             double cappedRatio = Math.max(-maxRatio, Math.min(maxRatio, ratio));
             priceChange = cappedRatio * baseChangeFactor * directionalMultiplier;
         } else if (!wasBuy && !wasSell) {
-            // No trading → random noise
             double noise = (rng.nextDouble() * 0.01) - 0.005; // [-0.005, 0.005]
             System.out.printf("\t\t[Random Drift] %.4f\n", noise);
             priceChange = noise;
@@ -121,7 +129,7 @@ public class StockMarket extends Unit {
         if (MarketPrice < 0.01) {
             MarketPrice = 0.01;
         } else if (MarketPrice > 1000.00) {
-            MarketPrice = 1000.00;
+            MarketPrice = 500.00;
         }
 
         System.out.printf("\t\t Final Price Change: %.4f\n", priceChange);
@@ -129,7 +137,10 @@ public class StockMarket extends Unit {
 
         wasBuy = false;
         wasSell = false;
+        AmountSold = 0;
+        AmountBought = 0;
     }
+
 
     synchronized int getAvalibleShares() {
         return avalibleShares;
@@ -266,7 +277,7 @@ public class StockMarket extends Unit {
     }
 
     public static void main(String[] args) {
-        StockMarket stockMarket = new StockMarket(new SimulationInput(), 1000, 50.00, 1000, 0);
+        StockMarket stockMarket = new StockMarket(new SimulationInput(), 100000, 10.00, 1000, 0);
         Thread A = new Thread(stockMarket);
         A.start();
     }

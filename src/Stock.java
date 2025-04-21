@@ -12,6 +12,7 @@ public class Stock implements MarketObserver{
     private double currentPrice;
     private ArrayList<Double> trackedPrices;
     private ArrayList<Integer> trackedShares;
+    int startShares = 0;
 
     public int getTrackedsize(){
         return trackedPrices.size();
@@ -25,6 +26,7 @@ public class Stock implements MarketObserver{
         trackedPrices.add(currentPrice);
         trackedShares = new ArrayList<>();
         trackedShares.add(shares);
+        startShares = shares;
 
     }
     public static synchronized Stock getInstance(double startingPrice,int shares){
@@ -138,4 +140,7 @@ public class Stock implements MarketObserver{
         System.out.println();
     }
 
+    public int getTotalShares() {
+        return trackedShares.getLast();
+    }
 }
