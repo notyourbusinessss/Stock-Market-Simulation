@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ArrowPanel extends JPanel {
 
-    private int MAXVALS = 250;
+    private int MAXVALS = 500;
     private JButton pauseButton, upButton, downButton;
     private JLabel valueLabel, marketStateLabel, timeLabel;
     private StockMarket stock;
@@ -22,7 +22,7 @@ public class ArrowPanel extends JPanel {
     private double tempHigh = Double.MIN_VALUE;
     private double tempLow = Double.MAX_VALUE;
     private int tickCounter = 0;
-    private static final int TICKS_PER_CANDLE = 24;
+    private static final int TICKS_PER_CANDLE = 12;
 
     private int totalTicks = 0;
 
@@ -131,6 +131,9 @@ public class ArrowPanel extends JPanel {
     private void trackCandle(double price) {
         if (trimHistory && priceHistory.size() > MAXVALS) {
             for (int i = 0; i < TICKS_PER_CANDLE; ++i) {
+                if (trimHistory && candleHistory.size() > MAXVALS / TICKS_PER_CANDLE) {
+                    candleHistory.remove(0);
+                }
                 priceHistory.remove(0);
             }
         }
@@ -154,7 +157,7 @@ public class ArrowPanel extends JPanel {
     }
 
     public void updateLabel() {
-        valueLabel.setText(String.format("%.2f", stock.MarketPrice));
+        valueLabel.setText(String.format("%.2f $", stock.MarketPrice));
     }
 
     private String getMarketState() {

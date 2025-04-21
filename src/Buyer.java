@@ -74,7 +74,7 @@ public class Buyer extends Unit implements StockObserver {
         }
 
         double recent = stockMarket.TrackedStock.getPriceAt(stockMarket.TrackedStock.getTrackedsize() - 1);
-        double past = stockMarket.TrackedStock.getPriceAt(stockMarket.TrackedStock.getTrackedsize() - 10);
+        double past = stockMarket.TrackedStock.getPriceAt(stockMarket.TrackedStock.getTrackedsize() - 3);
 
         if (past == 0) return 100; // avoid division by zero
 
@@ -99,7 +99,7 @@ public class Buyer extends Unit implements StockObserver {
         int randomness = new Random().nextInt(21) - 10; // [-10, +10]
         double confidence = 0; // Will be adjusted below
 
-        trendScore *= 0.25;
+        trendScore *= 100;
         System.out.println("\t\t percentage: " + "???" + "Market Trend : " + stockMarket.getMarketTrend(getLookbackHours()) + "Market score : " + trendScore );
         if (trendScore <= -75) {
             // Low trust panic sells, high trust tries to "buy the dip"
@@ -117,7 +117,7 @@ public class Buyer extends Unit implements StockObserver {
             // Market is calm — behavior is unpredictable with tiny lean from activity/trust
             double trustBias = (baseTrust - 50) * 0.05;   // soft push if they lean very trusting
             double activityBias = (activity - 50) * 0.05; // high activity might stir a little motion
-            confidence = randomness * 2 + trustBias + activityBias; // randomness dominates
+            confidence = 2 + trustBias  - randomness*activityBias; // randomness dominates
             System.out.println(name + " sees a STABLE market");
         }else if (trendScore <= 50) { // RISING
             // High trust = more likely to buy
@@ -129,7 +129,7 @@ public class Buyer extends Unit implements StockObserver {
         }else { // BOOMING
             // Strong buyer bias — high trust buyers will really push to buy
             double trustBias = baseTrust * 0.8;             // up to 80
-            double activityBoost = activity * 0.3;          // up to 30
+            double activityBoost = activity * -0.3;          // up to 30
             confidence = trustBias + activityBoost + randomness;
             System.out.println(name + " sees a BOOMING market");
         }
@@ -140,7 +140,7 @@ public class Buyer extends Unit implements StockObserver {
         if (confidence < -10 && holding > 0) {
             return 1; // SELL
         }
-        if (confidence > 10 && Capital>0) {
+        if (confidence > 10 && Capital  > 0) {
             return 2; // BUY
         }
         return 3; // HOLD

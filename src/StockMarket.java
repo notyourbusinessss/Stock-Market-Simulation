@@ -5,20 +5,40 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Semaphore;
 
-/**
- * The stock market is the middle ground of the interactions between the buyers and the Stock, here is where the buyers will buy or sell their stocks.
- */
-public class StockMarket extends Unit{
+public class StockMarket extends Unit {
     static int waiting = 10;
     Stock TrackedStock;
     private int avalibleShares;
     private List<MarketObserver> Stocks = new ArrayList<>();
     double MarketPrice;
 
-    public static final Semaphore pauseLock = new Semaphore(1); // starts "unpaused"
+    public static final Semaphore pauseLock = new Semaphore(1);
     private volatile boolean paused = false;
+
+    private boolean wasBuy = false;
+    private boolean wasSell = false;
+    private final Random rng = new Random();
+
+    int Time;
+    static int Now;
+    static boolean open = true;
+
+    public StockMarket(SimulationInput input) {
+        super(input);
+    }
+
+    public StockMarket(SimulationInput input, int totalShares, double InitialPrice, int time, int now) {
+        super(input);
+        this.avalibleShares = totalShares;
+        this.MarketPrice = InitialPrice;
+        this.Time = time;
+        this.Now = now;
+        TrackedStock = Stock.getInstance(this.MarketPrice, this.avalibleShares);
+        Stocks.add(TrackedStock);
+    }
 
     public void togglePause() {
         if (paused) {
@@ -37,106 +57,99 @@ public class StockMarket extends Unit{
         return paused;
     }
 
-    /**
-     * Time in which the simulation will run
-     */
-    int Time;
-    static int Now;
-
-    static boolean open = true;
-
-    public StockMarket(SimulationInput input) {
-        super(input);
-    }
-    public StockMarket(SimulationInput input, int totalShares, double InitialPrice, int time, int now) {
-        super(input);
-        this.avalibleShares = totalShares;
-        this.MarketPrice = InitialPrice;
-        this.Time = time;
-        this.Now = now;
-        TrackedStock = Stock.getInstance(this.MarketPrice, this.avalibleShares);
-        Stocks.add(TrackedStock);
-    }
-
-    double getMarketTrend(int GoBack){
+    double getMarketTrend(int GoBack) {
         return TrackedStock.getTrend(GoBack);
     }
-    double getCurrentPrice(){
+
+    double getCurrentPrice() {
         return MarketPrice;
     }
 
-    void ForcedMarketPrice(ArrayList<Double> ForcedMarketPrices){
+    void ForcedMarketPrice(ArrayList<Double> ForcedMarketPrices) {
         TrackedStock.ForcedStock(ForcedMarketPrices);
     }
 
-    synchronized void sell(int amount,Buyer buyer){
-        buyer.removeholding(amount);
-        avalibleShares += amount;
-        buyer.Capital += amount*this.MarketPrice;
+    public synchronized void buy(int amount, Buyer buyer) {
+        if (avalibleShares >= amount && amount > 0) {
+            avalibleShares -= amount;
+            buyer.addholding(amount);
+            buyer.Capital -= amount * this.MarketPrice;
+            wasBuy = true;
+        }
+    }
+
+    public synchronized void sell(int amount, Buyer buyer) {
+        if (amount > 0) {
+            buyer.removeholding(amount);
+            avalibleShares += amount;
+            buyer.Capital += amount * this.MarketPrice;
+            wasSell = true;
+        }
     }
 
     synchronized void updateStockPrice() {
-        System.out.println("\t\t updating");
-        if (avalibleShares == 0) return;
+        System.out.println("\t\t[Updating Stock Price]");
 
         double avg = TrackedStock.AVGAvalibleShares();
-        double delta = avalibleShares - avg;
+        double delta = avg - avalibleShares;
         double ratio = delta / avg;
 
-        // Cap the max change to ±10%
-        double maxChange = 0.1;
-        ratio = Math.max(-maxChange, Math.min(maxChange, -ratio)); // Negate: less supply → increase price
+        double maxRatio = 0.1;
+        double baseChangeFactor = 0.03;
 
-        // Apply dampened change (only 5% of the allowed ratio)
-        double changeFactor = 0.05;
-        MarketPrice += MarketPrice * ratio * changeFactor * (avg > avalibleShares ? 1 : 3.5 );
+        double priceChange = 0;
 
-        // Apply slight decay if no change
-        if (Math.abs(delta) < avg * 0.05) {
-            double decay = Math.min(0.05, 1.0 / (avg == 0 ? 100 : avg)) * MarketPrice;
-            MarketPrice -= decay;
+        if (wasBuy && !wasSell) {
+            // Buyers pushing price up slowly
+            double directionalMultiplier = 0.5;
+            double cappedRatio = Math.max(-maxRatio, Math.min(maxRatio, ratio));
+            priceChange = cappedRatio * baseChangeFactor * directionalMultiplier;
+        } else if (!wasBuy && wasSell) {
+            // Sellers causing price drop more aggressively
+            double directionalMultiplier = 2.5;
+            double cappedRatio = Math.max(-maxRatio, Math.min(maxRatio, ratio));
+            priceChange = cappedRatio * baseChangeFactor * directionalMultiplier;
+        } else if (!wasBuy && !wasSell) {
+            // No trading → random noise
+            double noise = (rng.nextDouble() * 0.01) - 0.005; // [-0.005, 0.005]
+            System.out.printf("\t\t[Random Drift] %.4f\n", noise);
+            priceChange = noise;
         }
+
+        MarketPrice += MarketPrice * priceChange;
 
         if (MarketPrice < 0.01) {
             MarketPrice = 0.01;
+        } else if (MarketPrice > 1000.00) {
+            MarketPrice = 1000.00;
         }
 
-        System.out.printf("\t\t Updated MarketPrice: %.2f\n", MarketPrice);
+        System.out.printf("\t\t Final Price Change: %.4f\n", priceChange);
+        System.out.printf("\t\t Updated Market Price: %.2f\n", MarketPrice);
+
+        wasBuy = false;
+        wasSell = false;
     }
 
-    synchronized int getAvalibleShares(){
+    synchronized int getAvalibleShares() {
         return avalibleShares;
     }
 
-    public void buy(int amount, Buyer buyer) {
-        if (avalibleShares >= amount) {
-            avalibleShares -= amount;
-            buyer.addholding(amount);
-            buyer.Capital -= amount*this.MarketPrice;
-        } else {
-            amount = 0;
-        }
-    }
-
-    void updateStock(){
-        for (MarketObserver observer : Stocks){
+    void updateStock() {
+        for (MarketObserver observer : Stocks) {
             observer.updateMarketState(avalibleShares, MarketPrice);
         }
     }
 
-    static boolean isOpen(){
+    static boolean isOpen() {
         return open;
     }
 
     @Override
-    public void performAction() {
-
-    }
+    public void performAction() {}
 
     @Override
-    public void submitStatistics() {
-
-    }
+    public void submitStatistics() {}
 
     @Override
     public void run() {
