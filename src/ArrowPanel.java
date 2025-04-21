@@ -114,7 +114,7 @@ public class ArrowPanel extends JPanel {
 
             if (!stock.isPaused()) {
                 trackCandle(stock.MarketPrice);
-                totalTicks++;
+                totalTicks += 10;
                 int years = totalTicks / (24 * 365);
                 int days = (totalTicks / 24) % 365;
                 int hours = totalTicks % 24;
