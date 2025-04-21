@@ -191,12 +191,19 @@ public class StockMarket extends Unit {
     @Override
     public void run() {
         System.out.println("setting");
-        ArrowPanel panel = new ArrowPanel(this);
+        ArrowPanel arrowPanel = new ArrowPanel(this);
+        SimulatedTradePanel simPanel = new SimulatedTradePanel(this);
 
         SwingUtilities.invokeLater(() -> {
-            CustomWindowPanel window = new CustomWindowPanel(panel);
-            window.showWindow();
+            // === Window 1: Market Graph ===
+            CustomWindowPanel marketWindow = new CustomWindowPanel(arrowPanel,true);
+            marketWindow.showWindow(); // This shows your main stock window
+
+            // === Window 2: Simulated Trading ===
+            CustomWindowPanel simTradeWindow = new CustomWindowPanel(simPanel,false);
+            simTradeWindow.showWindow(); // This shows your simulated trading panel
         });
+
 
 
         Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
@@ -228,7 +235,8 @@ public class StockMarket extends Unit {
             updateStockPrice();
             updateStock();
 
-            SwingUtilities.invokeLater(panel::updateLabel);
+            SwingUtilities.invokeLater(arrowPanel::updateLabel);
+            SwingUtilities.invokeLater(simPanel::updateLabels);
 
             try {
                 Thread.sleep(waiting);

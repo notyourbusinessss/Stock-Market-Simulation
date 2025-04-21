@@ -2,14 +2,14 @@ import javax.swing.*;
 import java.awt.*;
 
 public class CustomWindowPanel extends JPanel {
-
+    private final boolean exitOnClose;
     private final JFrame frame;
     private boolean isFullscreen = false;
     private Rectangle windowedBounds; // Store window size before going fullscreen
 
-    public CustomWindowPanel(JPanel innerContent) {
+    public CustomWindowPanel(JPanel innerContent, boolean exitOnClose) {
         super(new BorderLayout());
-
+        this.exitOnClose = exitOnClose;
         // === Title Bar ===
         JPanel titleBar = new JPanel(new BorderLayout());
         titleBar.setBackground(Color.BLACK);
@@ -82,7 +82,10 @@ public class CustomWindowPanel extends JPanel {
         frame.addMouseMotionListener(resizeListener);
 
         // === Action Listeners ===
-        close.addActionListener(e -> System.exit(0));
+        close.addActionListener(e -> {
+            if (exitOnClose) System.exit(0);
+            else frame.dispose();
+        });
         minimize.addActionListener(e -> frame.setState(Frame.ICONIFIED));
         fullscreenToggle.addActionListener(e -> toggleFullscreen());
     }

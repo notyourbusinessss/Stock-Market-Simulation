@@ -93,8 +93,10 @@ public class ArrowPanel extends JPanel {
             toggleTrimButton.setText(trimHistory ? "Keep All History" : "Trim History");
         });
 
+
         JPanel buttonPanel = new JPanel(new GridLayout(6, 1, 5, 5));
         buttonPanel.setBackground(Color.BLACK);
+
         buttonPanel.add(upButton);
         buttonPanel.add(downButton);
         buttonPanel.add(pauseButton);
