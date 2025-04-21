@@ -92,7 +92,8 @@ public class CustomWindowPanel extends JPanel {
     }
 
     private void toggleFullscreen() {
-        GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        GraphicsConfiguration config = frame.getGraphicsConfiguration();
+        GraphicsDevice device = config.getDevice();
 
         if (!isFullscreen) {
             windowedBounds = frame.getBounds();
@@ -110,4 +111,5 @@ public class CustomWindowPanel extends JPanel {
             isFullscreen = false;
         }
     }
+
 }
