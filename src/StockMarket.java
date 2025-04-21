@@ -199,30 +199,20 @@ public class StockMarket extends Unit {
         });
 
 
-        List<Thread> buyerThreads = new ArrayList<>();
-        Random rand = new Random();
-        for (int i = 1; i <= 6; i++) {
-            int holding = 100 + rand.nextInt(1000);
-            int activity = rand.nextInt(101);
-            int trust = rand.nextInt(101);
-            Buyer b = new Buyer(input, "Buyer #" + i, holding, this, activity, trust);
-            this.avalibleShares -= b.holding;
-            Thread t = new Thread(b);
-            t.start();
-            buyerThreads.add(t);
-        }
-        for (int i = 1; i <= 2; i++) {
-            int holding = 100 + rand.nextInt(10000);
-            int activity = rand.nextInt(101);
-            int trust = rand.nextInt(101);
-            RandomBuyer b = new RandomBuyer(input, "Big-Buyer #" + i, holding, this, activity, trust);
-            this.avalibleShares -= b.holding;
-            Thread t = new Thread(b);
-            t.start();
-            buyerThreads.add(t);
-        }
-
-
+        Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        this.avalibleShares -= buyer1.holding;
+        Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 100, 50);
+        this.avalibleShares -= buyer2.holding;
+        RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "Random -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        RandomBuyer buyer4 = new RandomBuyer(new SimulationInput(), "Random -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        Thread A = new Thread(buyer1);
+        Thread B = new Thread(buyer2);
+        Thread C = new Thread(buyer3);
+        Thread D = new Thread(buyer4);
+        A.start();
+        B.start();
+        C.start();
+        D.start();
 
         while (true || StockMarket.isOpen()) {
             try {
