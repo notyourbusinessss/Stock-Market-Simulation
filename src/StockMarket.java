@@ -103,43 +103,69 @@ public class StockMarket extends Unit {
 
         double maxRatio = 0.1;
         double baseChangeFactor = 0.03;
-
         double priceChange = 0;
 
-        int totalShares = TrackedStock.getTotalShares(); // You may need to implement this if it's not there
+        int totalShares = TrackedStock.getTotalShares(); // Make sure this method exists in your Stock class
 
         if (wasBuy && !wasSell) {
-            double volumeFactor = Math.min(1.5, (double) AmountBought / (totalShares * 0.05)); // Cap to avoid huge jumps
-            double directionalMultiplier = 1 * volumeFactor;
+            // Volume-adjusted buying impact
+            double volumeFactor = Math.min(1.0, (double) AmountBought / (totalShares * 0.05));
+            double directionalMultiplier = 0.75 * volumeFactor;
             double cappedRatio = Math.max(-maxRatio, Math.min(maxRatio, ratio));
             priceChange = cappedRatio * baseChangeFactor * directionalMultiplier;
         } else if (!wasBuy && wasSell) {
-            double volumeFactor = Math.min(3.0, (double) AmountSold / (totalShares * 0.05)); // Sharper drop allowed
-            double directionalMultiplier = 4 * volumeFactor;
+            // Volume-adjusted selling impact
+            double volumeFactor = Math.min(3.0, (double) AmountSold / (totalShares * 0.05));
+            double directionalMultiplier = 4.0 * volumeFactor;
             double cappedRatio = Math.max(-maxRatio, Math.min(maxRatio, ratio));
             priceChange = cappedRatio * baseChangeFactor * directionalMultiplier;
         } else if (!wasBuy && !wasSell) {
+            // Idle → random drift
             double noise = (rng.nextDouble() * 0.01) - 0.005; // [-0.005, 0.005]
             System.out.printf("\t\t[Random Drift] %.4f\n", noise);
             priceChange = noise;
         }
 
+        // === Price Resistance and Dampening ===
+        double resistance = Math.max(0.1, 1.0 - (MarketPrice / 500.0));
+        priceChange *= resistance;
+
+        if (priceChange > 0) {
+            priceChange *= Math.pow(0.97, MarketPrice / 10.0);  // Reduce gain as price grows
+        }
+
+        // === Clamp maximum price change per tick ===
+        double maxTickChange = 0.02; // ±2%
+        priceChange = Math.max(-maxTickChange, Math.min(maxTickChange, priceChange));
+
+        // === Apply price change ===
         MarketPrice += MarketPrice * priceChange;
 
+        // === Idle decay if price is too high ===
+        if (!wasBuy && !wasSell && MarketPrice > 20) {
+            double decay = MarketPrice * 0.002;
+            MarketPrice -= decay;
+            System.out.printf("\t\t[Idle Decay] -%.4f\n", decay);
+        }
+
+        // === Floor & Cap ===
         if (MarketPrice < 0.01) {
             MarketPrice = 0.01;
         } else if (MarketPrice > 1000.00) {
             MarketPrice = 500.00;
         }
 
+        // === Debug ===
         System.out.printf("\t\t Final Price Change: %.4f\n", priceChange);
         System.out.printf("\t\t Updated Market Price: %.2f\n", MarketPrice);
 
+        // === Reset trade state ===
         wasBuy = false;
         wasSell = false;
         AmountSold = 0;
         AmountBought = 0;
     }
+
 
 
     synchronized int getAvalibleShares() {
@@ -166,76 +192,12 @@ public class StockMarket extends Unit {
     public void run() {
         System.out.println("setting");
         ArrowPanel panel = new ArrowPanel(this);
+
         SwingUtilities.invokeLater(() -> {
-            // Custom undecorated window with draggable title bar and close/minimize buttons
-            JFrame frame = new JFrame();
-            frame.setUndecorated(true);
-
-            // Enable resizing on undecorated frame
-            ResizeListener resizeListener = new ResizeListener(frame);
-            frame.addMouseListener(resizeListener);
-            frame.addMouseMotionListener(resizeListener);
-
-            JPanel content = new JPanel(new BorderLayout());
-
-            JPanel titleBar = new JPanel(new BorderLayout());
-            titleBar.setBackground(Color.BLACK);
-            titleBar.setPreferredSize(new Dimension(800, 30));
-
-            JLabel title = new JLabel("  Stock Market Simulator");
-            title.setForeground(Color.WHITE);
-            title.setFont(new Font("Arial", Font.BOLD, 12));
-
-            JButton close = new JButton("✕");
-            close.setForeground(Color.WHITE);
-            close.setBackground(Color.BLACK);
-            close.setBorder(null);
-            close.setFocusPainted(false);
-            close.addActionListener(e -> System.exit(0));
-
-            JButton minimize = new JButton("—");
-            minimize.setForeground(Color.WHITE);
-            minimize.setBackground(Color.BLACK);
-            minimize.setBorder(null);
-            minimize.setFocusPainted(false);
-            minimize.addActionListener(e -> frame.setState(Frame.ICONIFIED));
-
-            JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 2));
-            buttons.setOpaque(false);
-            buttons.add(minimize);
-            buttons.add(close);
-
-            titleBar.add(title, BorderLayout.WEST);
-            titleBar.add(buttons, BorderLayout.EAST);
-
-            final Point[] clickPoint = {null};
-            titleBar.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mousePressed(java.awt.event.MouseEvent e) {
-                    clickPoint[0] = e.getPoint();
-                }
-            });
-            titleBar.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-                public void mouseDragged(java.awt.event.MouseEvent e) {
-                    Point p = frame.getLocation();
-                    frame.setLocation(p.x + e.getX() - clickPoint[0].x, p.y + e.getY() - clickPoint[0].y);
-                }
-            });
-
-            content.add(titleBar, BorderLayout.NORTH);
-            content.add(panel, BorderLayout.CENTER);
-
-            // Create a border wrapper panel to simulate a black border
-            JPanel bordered = new JPanel(new BorderLayout());
-            bordered.setBackground(Color.BLACK);
-            bordered.setBorder(BorderFactory.createLineBorder(Color.BLACK, 5));
-            bordered.add(content, BorderLayout.CENTER);
-
-            frame.setContentPane(bordered);
-            frame.setSize(800, 400);
-            frame.setLocationRelativeTo(null);
-            frame.setResizable(true);
-            frame.setVisible(true);
+            CustomWindowPanel window = new CustomWindowPanel(panel);
+            window.showWindow();
         });
+
 
         Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
         this.avalibleShares -= buyer1.holding;
@@ -277,7 +239,7 @@ public class StockMarket extends Unit {
     }
 
     public static void main(String[] args) {
-        StockMarket stockMarket = new StockMarket(new SimulationInput(), 100000, 10.00, 1000, 0);
+        StockMarket stockMarket = new StockMarket(new SimulationInput(), 10000, 50.00, 1000, 0);
         Thread A = new Thread(stockMarket);
         A.start();
     }
