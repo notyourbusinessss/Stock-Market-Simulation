@@ -1,7 +1,14 @@
 import Skeleton.*;
+
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
 public class Buyer extends Unit implements StockObserver {
+    private final List<ScrollingNews> activeNews = new LinkedList<>();
+
+
+    boolean speak = true;
     /**
      * Base trust is the trust someone will have in a certain market
      * 0   --> no trust in the market at all : will sell more then he will buy.
@@ -69,19 +76,22 @@ public class Buyer extends Unit implements StockObserver {
     }
 
     public double getTrendScore() {
-        if (stockMarket.TrackedStock.getTrackedsize() < 11) {
-            return 0; // Not enough data to calculate 10 steps back
-        }
+        int lookbackTicks = Math.max(3, getLookbackTicks()); // Based on activity
 
-        double recent = stockMarket.TrackedStock.getPriceAt(stockMarket.TrackedStock.getTrackedsize() - 1);
-        double past = stockMarket.TrackedStock.getPriceAt(stockMarket.TrackedStock.getTrackedsize() - 3);
+        int size = stockMarket.TrackedStock.getTrackedsize();
+        if (size < lookbackTicks + 1) return 0;
 
-        if (past == 0) return 100; // avoid division by zero
+        double recent = stockMarket.TrackedStock.getPriceAt(size - 1);
+        double past = stockMarket.TrackedStock.getPriceAt(size - 1 - lookbackTicks);
+
+        if (past == 0) return 0;
 
         double diff = recent - past;
-        double percent = (diff / past) * 100; // Trend score
-
-        return percent;
+        return (diff / past) * 100;
+    }
+    private int getLookbackTicks() {
+        // Convert activity [0-100] into lookback range (e.g., 3 to 20 ticks)
+        return (int)(20 - (activity / 5)); // activity = 0 ⇒ lookback 20, activity = 100 ⇒ lookback 0
     }
 
 
@@ -93,49 +103,49 @@ public class Buyer extends Unit implements StockObserver {
      * @return
      */
     int makeDecision() {
-        System.out.println("\t\t Make Decision");
+        //System.out.println("\t\t Make Decision");
         double trendScore = getTrendScore();
 
         int randomness = new Random().nextInt(21) - 10; // [-10, +10]
         double confidence = 0; // Will be adjusted below
 
         //trendScore *= 100;
-        System.out.println("\t\t percentage: " + "???" + "Market Trend : " + stockMarket.getMarketTrend(getLookbackHours()) + "Market score : " + trendScore );
+        //System.out.println("\t\t percentage: " + "???" + "Market Trend : " + stockMarket.getMarketTrend(getLookbackHours()) + "Market score : " + trendScore );
         if (trendScore <= -75) {
             // Low trust panic sells, high trust tries to "buy the dip"
             double sellPressure = (100 - baseTrust) * 0.6;  // Low trust → high sell pressure
             double buyRescue = baseTrust * 0.3;             // High trust → might still buy
             double activityBoost = activity * 0.2;
             confidence = buyRescue - sellPressure + activityBoost + randomness;
-            System.out.println(name + " sees a CRASHING market");
+            //System.out.println(name + " sees a CRASHING market");
         }
         else if (trendScore <= -30) { // DECLINING
             confidence = ((50 - baseTrust) * 0.5) + (activity * 0.2) + randomness;
-            System.out.println(name + " sees a DECLINING market");
+            //System.out.println(name + " sees a DECLINING market");
 
         }else if (trendScore <= 10) { // STABLE
             // Market is calm — behavior is unpredictable with tiny lean from activity/trust
             double trustBias = (baseTrust - 50) * 0.05;   // soft push if they lean very trusting
             double activityBias = (activity - 50) * 0.05; // high activity might stir a little motion
             confidence = 2 + trustBias  - randomness*activityBias; // randomness dominates
-            System.out.println(name + " sees a STABLE market");
+            //System.out.println(name + " sees a STABLE market");
         }else if (trendScore <= 50) { // RISING
             // High trust = more likely to buy
             // Activity encourages acting, but not as much as in booming
             double trustBias = (baseTrust - 50) * 0.5;      // can swing ±25
             double activityBoost = activity * 0.2;          // 0–20
             confidence = trustBias + activityBoost + randomness;
-            System.out.println(name + " sees a RISING market");
+            //System.out.println(name + " sees a RISING market");
         }else { // BOOMING
             // Strong buyer bias — high trust buyers will really push to buy
             double trustBias = baseTrust * 0.8;             // up to 80
             double activityBoost = activity * -0.3;          // up to 30
             confidence = trustBias + activityBoost + randomness;
-            System.out.println(name + " sees a BOOMING market");
+            //System.out.println(name + " sees a BOOMING market");
         }
 
 
-        System.out.printf("%s -- TrendScore: %.2f, Confidence: %.2f, Holding: %d, Capital: %.2f%n", name, trendScore, confidence, holding,Capital);
+        //System.out.printf("%s -- TrendScore: %.2f, Confidence: %.2f, Holding: %d, Capital: %.2f%n", name, trendScore, confidence, holding,Capital);
 
         if (confidence < -10 && holding > 0) {
             return 1; // SELL
@@ -206,12 +216,16 @@ public class Buyer extends Unit implements StockObserver {
             case 1:
                 int soldAmount = getTransactionAmount(true);
                 stockMarket.sell(soldAmount,this);
-                System.out.println(name + " Sold " + soldAmount + " shares at a price of " + stockMarket.getCurrentPrice() + " totaling at a price of " + stockMarket.getCurrentPrice()*soldAmount);
+                if(speak){
+                    System.out.println(name + " Sold " + soldAmount + " shares at a price of " + stockMarket.getCurrentPrice() + " totaling at a price of " + stockMarket.getCurrentPrice()*soldAmount + " New Capital : " + this.Capital);
+                }
                 break;
             case 2:
                 int buyAmount = getTransactionAmount(false);
                 stockMarket.buy(buyAmount,this);
-                System.out.println(name+ " bought " + buyAmount + " shares at a price of " + stockMarket.getCurrentPrice());
+                if(speak){
+                    System.out.println(name+ " bought " + buyAmount + " shares at a price of " + stockMarket.getCurrentPrice() + " New Capital : " + this.Capital);
+                }
                 break;
             case 3:
                 //Do nothing, your holding...
@@ -265,7 +279,7 @@ public class Buyer extends Unit implements StockObserver {
 
     @Override
     public void getnewpricing(double price) {
-        System.out.println(name + "\t\t Got new pricing");
+        //System.out.println(name + "\t\t Got new pricing");
         synchronized (this) {
             newpricing = true;
             notify(); // wake up the thread

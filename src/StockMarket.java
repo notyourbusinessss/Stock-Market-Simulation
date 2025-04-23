@@ -10,8 +10,32 @@ import java.util.concurrent.Semaphore;
 
 
 public class StockMarket extends Unit {
+    String[] positiveEvents = {
+            "Company releases groundbreaking new product.",
+            "Earnings report exceeds all expectations.",
+            "CEO announces major investment in R&D.",
+            "Company wins major government contract.",
+            "Stock receives strong buy recommendation from top analyst.",
+            "Market sentiment surges after positive economic news."
+    };
+
+    String[] negativeEvents = {
+            "Unexpected quarterly loss reported.",
+            "CEO involved in corporate scandal.",
+            "Product recall causes investor panic.",
+            "Major lawsuit filed against the company.",
+            "Market rattled by economic uncertainty.",
+            "Competitor launches superior alternative product."
+    };
+
+
+
+
     private double lastEventBias = 0.0; // [-1.0 (strongly negative) to +1.0 (strongly positive)]
     private double marketBias = 0.0; // Range: [-1.0, 1.0]
+    private int nextMajorEventTick = 0;
+    private final Random rand = new Random();
+
 
 
     int AmountSold = 0;
@@ -33,6 +57,7 @@ public class StockMarket extends Unit {
     int Time;
     static int Now;
     static boolean open = true;
+    static String lastNews;
 
     public StockMarket(SimulationInput input) {
         super(input);
@@ -46,6 +71,8 @@ public class StockMarket extends Unit {
         this.Now = now;
         TrackedStock = Stock.getInstance(this.MarketPrice, this.avalibleShares);
         Stocks.add(TrackedStock);
+        nextMajorEventTick = rand.nextInt(1001) + 500; // [500, 1500]
+        lastNews =String.format("Company makes Debut on stock market with a Starting price of %.2f$",MarketPrice);
     }
 
     public void togglePause() {
@@ -100,7 +127,7 @@ public class StockMarket extends Unit {
 
     synchronized void updateStockPrice() {
         // This method is synchronized to prevent concurrent access issues since it's likely called by multiple threads.
-        System.out.println("\t\t[Updating Stock Price]");
+        //System.out.println("\t\t[Updating Stock Price]");
 
         // Calculate the average number of available shares historically or across the system
         double avg = TrackedStock.AVGAvalibleShares();
@@ -136,7 +163,7 @@ public class StockMarket extends Unit {
         } else if (!wasBuy && !wasSell) {
             // Introduce small random noise to simulate market drift
             double noise = (rng.nextDouble() * 0.01) - 0.005; // Random float in [-0.005, 0.005]
-            System.out.printf("\t\t[Random Drift] %.4f\n", noise);
+            //System.out.printf("\t\t[Random Drift] %.4f\n", noise);
             priceChange = noise;
         }
 
@@ -171,7 +198,7 @@ public class StockMarket extends Unit {
         if (!wasBuy && !wasSell && MarketPrice > 20) {
             double decay = MarketPrice * 0.002; // 0.2% decay
             MarketPrice -= decay;
-            System.out.printf("\t\t[Idle Decay] -%.4f\n", decay);
+            //System.out.printf("\t\t[Idle Decay] -%.4f\n", decay);
         }
 
         // === Clamp MarketPrice to avoid nonsensical values ===
@@ -182,8 +209,8 @@ public class StockMarket extends Unit {
         }
 
         // === Logging the final values ===
-        System.out.printf("\t\t Final Price Change: %.4f\n", priceChange);
-        System.out.printf("\t\t Updated Market Price: %.2f\n", MarketPrice);
+        //System.out.printf("\t\t Final Price Change: %.4f\n", priceChange);
+        //System.out.printf("\t\t Updated Market Price: %.2f\n", MarketPrice);
 
         // === Reset state flags for next tick ===
         wasBuy = false;
@@ -239,12 +266,21 @@ public class StockMarket extends Unit {
         lastEventBias = eventImpact;
 
         if (eventImpact > 0) {
-            System.out.printf("Major Event (Positive): Stock increased by %.2f%% → New price: %.2f\n", severity * 100, MarketPrice);
-            marketBias += 0.3; // boost positive bias
+            String message = positiveEvents[rand.nextInt(positiveEvents.length)];
+            lastNews = message;
+            System.out.printf("Positive Market Event: %s\n", message);
+            lastNews += String.format("Stock increased by %.2f%%",severity*100);
+            System.out.printf("Stock increased by %.2f%% → New price: %.2f\n", severity * 100, MarketPrice);
+            marketBias += 0.3;
         } else {
-            System.out.printf("Major Event (Negative): Stock decreased by %.2f%% → New price: %.2f\n", severity * 100, MarketPrice);
-            marketBias -= 0.3; // increase negative bias
+            String message = negativeEvents[rand.nextInt(negativeEvents.length)];
+            lastNews = message;
+            System.out.printf("Negative Market Event: %s\n", message);
+            lastNews += String.format("Stock decreased by %.2f%%",severity*100);
+            System.out.printf("Stock decreased by %.2f%% → New price: %.2f\n", severity * 100, MarketPrice);
+            marketBias -= 0.3;
         }
+
 
         // Clamp bias
         marketBias = Math.max(-1.0, Math.min(1.0, marketBias));
@@ -261,7 +297,7 @@ public class StockMarket extends Unit {
 
     @Override
     public void run() {
-        System.out.println("setting");
+        //System.out.println("setting");
         ArrowPanel arrowPanel = new ArrowPanel(this);
         SimulatedTradePanel simPanel = new SimulatedTradePanel(this);
 
@@ -279,6 +315,7 @@ public class StockMarket extends Unit {
 
         Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
         this.avalibleShares -= buyer1.holding;
+        buyer1.speak = false;
         Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 100, 50);
         this.avalibleShares -= buyer2.holding;
         RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "Random -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
@@ -300,8 +337,8 @@ public class StockMarket extends Unit {
                 e.printStackTrace();
             }
 
-            TrackedStock.printAsciiPriceGraph();
-            System.out.println("------------------------\n" + TrackedStock.getCurrentPrice() + " : " + TrackedStock.getTrend(10) + ", " + TrackedStock.AVGAvalibleShares() + "\n------------------------\n");
+            //TrackedStock.printAsciiPriceGraph();
+            //System.out.println("------------------------\n" + TrackedStock.getCurrentPrice() + " : " + TrackedStock.getTrend(10) + ", " + TrackedStock.AVGAvalibleShares() + "\n------------------------\n");
 
             updateStockPrice();
             updateStock();
@@ -315,8 +352,9 @@ public class StockMarket extends Unit {
                 throw new RuntimeException(e);
             }
 
-            if(Now%1000==0){
+            if (Now == nextMajorEventTick) {
                 MajorEvent();
+                nextMajorEventTick = Now + rand.nextInt(1001) + 500; // schedule next event
             }
             Now++;
         }

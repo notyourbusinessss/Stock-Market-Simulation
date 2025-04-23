@@ -5,10 +5,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ArrowPanel extends JPanel {
+    private final List<ScrollingNews> activeNews = new LinkedList<>();
+
     private final int timediff = 10;
     private int MAXVALS = 500;
     private JButton pauseButton, upButton, downButton;
     private JLabel valueLabel, marketStateLabel, timeLabel;
+    private JLabel newsLabel;
+
     private StockMarket stock;
     Color Background = new Color(15, 15, 15);
     private boolean showLine = true;
@@ -22,20 +26,54 @@ public class ArrowPanel extends JPanel {
     private double tempHigh = Double.MIN_VALUE;
     private double tempLow = Double.MAX_VALUE;
     private int tickCounter = 0;
-    private static final int TICKS_PER_CANDLE = 12;
+    private static final int TICKS_PER_CANDLE = 6;
 
     private int totalTicks = 0;
+
+    private String lastDisplayedNews = "";
+    private int newsX = getWidth();
+    private Timer newsScrollTimer;
 
     public ArrowPanel(StockMarket stockMarket) {
         this.stock = stockMarket;
         setLayout(new BorderLayout());
+
+        JPanel newsPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                g.setColor(Color.YELLOW);
+                g.setFont(new Font("Arial", Font.BOLD, 12));
+                synchronized (activeNews) {
+                    for (ScrollingNews sn : activeNews) {
+                        g.drawString("News: " + sn.message, sn.x, getHeight() - 5);
+                    }
+                }
+            }
+        };
+        newsPanel.setOpaque(true);
+        newsPanel.setBackground(new Color(10, 10, 10));
+        newsPanel.setPreferredSize(new Dimension(0, 25));
+        add(newsPanel, BorderLayout.NORTH);
+
+
+        newsScrollTimer = new Timer(30, e -> {
+            synchronized (activeNews) {
+                activeNews.removeIf(sn -> sn.x + getFontMetrics(new Font("Arial", Font.BOLD, 12)).stringWidth("News: " + sn.message) < 0);
+                for (ScrollingNews sn : activeNews) {
+                    sn.x -= 2;
+                }
+            }
+            newsPanel.repaint();
+        });
+        newsScrollTimer.start();
+
 
         // === RIGHT PANEL ===
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBackground(Color.BLACK);
         rightPanel.setPreferredSize(new Dimension(120, 0));
 
-        // Top panel with value + market state + time
         JPanel topPanel = new JPanel(new GridLayout(3, 1));
         topPanel.setBackground(Color.BLACK);
 
@@ -55,7 +93,6 @@ public class ArrowPanel extends JPanel {
         topPanel.add(marketStateLabel);
         topPanel.add(timeLabel);
 
-        // Buttons
         upButton = new JButton("↑");
         downButton = new JButton("↓");
         pauseButton = new JButton("Pause");
@@ -93,10 +130,8 @@ public class ArrowPanel extends JPanel {
             toggleTrimButton.setText(trimHistory ? "Keep All History" : "Trim History");
         });
 
-
         JPanel buttonPanel = new JPanel(new GridLayout(6, 1, 5, 5));
         buttonPanel.setBackground(Color.BLACK);
-
         buttonPanel.add(upButton);
         buttonPanel.add(downButton);
         buttonPanel.add(pauseButton);
@@ -108,7 +143,7 @@ public class ArrowPanel extends JPanel {
         rightPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         add(rightPanel, BorderLayout.EAST);
-        setBackground(new Color(15, 15, 15));
+        setBackground(Background);
 
         new Timer(StockMarket.waiting * timediff, (ActionEvent e) -> {
             updateLabel();
@@ -120,11 +155,16 @@ public class ArrowPanel extends JPanel {
                 int years = totalTicks / (24 * 365);
                 int days = (totalTicks / 24) % 365;
                 int hours = totalTicks % 24;
-                timeLabel.setText(
-                        "<html>Year: " + years + "<br>Day: " + days + "<br>" + hours + ":00" + "</html>"
-                );
-
+                timeLabel.setText("<html>Year: " + years + "<br>Day: " + days + "<br>" + hours + ":00</html>");
             }
+
+            if (!StockMarket.lastNews.equals(lastDisplayedNews)) {
+                lastDisplayedNews = StockMarket.lastNews;
+                synchronized (activeNews) {
+                    activeNews.add(new ScrollingNews(lastDisplayedNews, getWidth()));
+                }
+            }
+
 
             repaint();
         }).start();
@@ -133,10 +173,7 @@ public class ArrowPanel extends JPanel {
     private void trackCandle(double price) {
         if (trimHistory && priceHistory.size() > MAXVALS) {
             for (int i = 0; i < TICKS_PER_CANDLE; ++i) {
-                if (trimHistory && candleHistory.size() > MAXVALS / TICKS_PER_CANDLE) {
-                    candleHistory.remove(0);
-                }
-                priceHistory.remove(0);
+                if (!priceHistory.isEmpty()) priceHistory.remove(0);
             }
         }
         priceHistory.add(price);
@@ -184,7 +221,7 @@ public class ArrowPanel extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         int w = getWidth(), h = getHeight();
-        int paddingLeft = 40, paddingRight = 140, paddingTop = 20, paddingBottom = 20;
+        int paddingLeft = 40, paddingRight = 140, paddingTop = 20, paddingBottom = 40;
         int graphWidth = w - paddingLeft - paddingRight;
         int graphHeight = h - paddingTop - paddingBottom;
 
@@ -216,6 +253,27 @@ public class ArrowPanel extends JPanel {
             g2.setColor(new Color(255, 255, 255, 50));
         }
 
+        // === Fixed Horizontal Time Axis (Labels change with simulation time) ===
+        int divisions = 8; // Number of tick marks
+        int totalGraphHours = totalTicks; // You can scale this if using different resolutions
+
+        g2.setColor(Color.GRAY);
+        g2.setFont(new Font("Arial", Font.PLAIN, 10));
+
+        for (int i = 0; i <= divisions; i++) {
+            int x = paddingLeft + (graphWidth * i) / divisions;
+
+            // Calculate time label from the right edge
+            int hoursAgo = ((divisions - i) * totalGraphHours) / divisions;
+
+            g2.drawLine(x, h - paddingBottom, x, h - paddingBottom + 4);
+            g2.drawString("-" + hoursAgo + "H", x - 15, h - paddingBottom + 15);
+        }
+
+
+
+
+        // Line graph
         if (showLine) {
             g2.setColor(Color.CYAN);
             for (int i = 0; i < renderPrices.size() - 1; i++) {
@@ -227,19 +285,17 @@ public class ArrowPanel extends JPanel {
             }
         }
 
+        // Candlesticks
         if (showCandles) {
             for (int i = 0; i < candleHistory.size(); i++) {
                 Candle c = candleHistory.get(i);
                 int x = paddingLeft + (int) (i * TICKS_PER_CANDLE * candleSpacing + TICKS_PER_CANDLE / 2.0 * candleSpacing);
-
                 int yHigh = paddingTop + (int) ((max - c.high) / range * graphHeight);
                 int yLow = paddingTop + (int) ((max - c.low) / range * graphHeight);
                 int yOpen = paddingTop + (int) ((max - c.open) / range * graphHeight);
                 int yClose = paddingTop + (int) ((max - c.close) / range * graphHeight);
-
                 g2.setColor(Color.WHITE);
                 g2.drawLine(x, yHigh, x, yLow);
-
                 int bodyTop = Math.min(yOpen, yClose);
                 int bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
                 g2.setColor(c.close >= c.open ? Color.GREEN : Color.RED);
@@ -248,17 +304,13 @@ public class ArrowPanel extends JPanel {
 
             if (tickCounter > 0) {
                 int x = paddingLeft + (int) (candleHistory.size() * TICKS_PER_CANDLE * candleSpacing + tickCounter / 2.0 * candleSpacing);
-
                 double currentPrice = stock.MarketPrice;
-
                 int yHigh = paddingTop + (int) ((max - tempHigh) / range * graphHeight);
                 int yLow = paddingTop + (int) ((max - tempLow) / range * graphHeight);
                 int yOpen = paddingTop + (int) ((max - tempOpen) / range * graphHeight);
                 int yClose = paddingTop + (int) ((max - currentPrice) / range * graphHeight);
-
                 g2.setColor(Color.WHITE);
                 g2.drawLine(x, yHigh, x, yLow);
-
                 int bodyTop = Math.min(yOpen, yClose);
                 int bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
                 g2.setColor(currentPrice >= tempOpen ? Color.GREEN : Color.RED);
@@ -267,4 +319,13 @@ public class ArrowPanel extends JPanel {
         }
     }
 
+    private static class Candle {
+        double open, close, high, low;
+        Candle(double open, double close, double high, double low) {
+            this.open = open;
+            this.close = close;
+            this.high = high;
+            this.low = low;
+        }
+    }
 }

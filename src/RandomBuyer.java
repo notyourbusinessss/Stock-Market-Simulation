@@ -5,6 +5,7 @@ public class RandomBuyer extends Buyer {
 
     public RandomBuyer(SimulationInput input, String name, int holding, StockMarket stockMarket, double baseTrust, double activity) {
         super(input, name, holding, stockMarket, baseTrust, activity);
+        this.speak = false;
     }
 
     @Override
@@ -12,7 +13,7 @@ public class RandomBuyer extends Buyer {
         Random rand = new Random();
         boolean decision = rand.nextBoolean(); // true = sell, false = buy
 
-        System.out.printf("%s -- Holding: %d, Capital: %.2f%n", name, holding,Capital);
+        //System.out.printf("%s -- Holding: %d, Capital: %.2f%n", name, holding,Capital);
 
         if (decision && holding > 0) {
             return 1; // SELL
