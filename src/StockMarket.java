@@ -16,8 +16,23 @@ public class StockMarket extends Unit {
             "CEO announces major investment in R&D.",
             "Company wins major government contract.",
             "Stock receives strong buy recommendation from top analyst.",
-            "Market sentiment surges after positive economic news."
+            "Market sentiment surges after positive economic news.",
+            "Company announces stock buyback program.",
+            "Successful product launch generates strong sales.",
+            "Tech innovation draws industry-wide attention.",
+            "Positive customer feedback boosts investor confidence.",
+            "Company expands into international markets.",
+            "Strategic partnership formed with major player.",
+            "Merger or acquisition announced with favorable terms.",
+            "Competitor suffers setback, benefiting this company.",
+            "Dividend payout increased by 20%.",
+            "New leadership brings optimistic vision.",
+            "Positive report from regulatory agency.",
+            "Supply chain improvements reduce operating costs.",
+            "Company recognized with industry award.",
+            "Institutional investor increases stake."
     };
+
 
     String[] negativeEvents = {
             "Unexpected quarterly loss reported.",
@@ -25,8 +40,23 @@ public class StockMarket extends Unit {
             "Product recall causes investor panic.",
             "Major lawsuit filed against the company.",
             "Market rattled by economic uncertainty.",
-            "Competitor launches superior alternative product."
+            "Competitor launches superior alternative product.",
+            "Leadership shakeup raises concerns.",
+            "Regulatory investigation announced.",
+            "High-profile customer ends contract.",
+            "Company misses key production deadline.",
+            "Supply chain disruption affects delivery.",
+            "Negative press surrounding company practices.",
+            "Social media backlash trends globally.",
+            "Downgrade from major credit agency.",
+            "Investor confidence shaken by accounting irregularities.",
+            "Failed product launch leads to poor reviews.",
+            "Security breach affects customer data.",
+            "Labor strike halts operations.",
+            "Analyst changes rating to 'Sell'.",
+            "Key executive unexpectedly resigns."
     };
+
 
 
 

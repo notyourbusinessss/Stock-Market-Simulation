@@ -52,7 +52,7 @@ public class ArrowPanel extends JPanel {
             }
         };
         newsPanel.setOpaque(true);
-        newsPanel.setBackground(new Color(10, 10, 10));
+        newsPanel.setBackground(new Color(20, 20, 20));
         newsPanel.setPreferredSize(new Dimension(0, 25));
         add(newsPanel, BorderLayout.NORTH);
 
@@ -160,8 +160,20 @@ public class ArrowPanel extends JPanel {
 
             if (!StockMarket.lastNews.equals(lastDisplayedNews)) {
                 lastDisplayedNews = StockMarket.lastNews;
+
+                int initialX = getWidth();
+                FontMetrics fm = getFontMetrics(new Font("Arial", Font.BOLD, 12));
+
                 synchronized (activeNews) {
-                    activeNews.add(new ScrollingNews(lastDisplayedNews, getWidth()));
+                    for (ScrollingNews sn : activeNews) {
+                        int messageWidth = fm.stringWidth("News: " + sn.message);
+                        // If still visible, offset the new one further to the right
+                        if (sn.x + messageWidth > initialX - 20) {
+                            initialX = sn.x + messageWidth + 20;
+                        }
+                    }
+
+                    activeNews.add(new ScrollingNews(lastDisplayedNews, initialX));
                 }
             }
 

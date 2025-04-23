@@ -5,5 +5,6 @@ public class ScrollingNews {
     ScrollingNews(String message, int startX) {
         this.message = message;
         this.x = startX;
+
     }
 }
