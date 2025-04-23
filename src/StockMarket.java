@@ -350,19 +350,14 @@ public class StockMarket extends Unit {
 
 
 
-        //System.out.println("setting");
         ArrowPanel arrowPanel = new ArrowPanel(this);
-        BuyerStatsPanel buyersPanel = new BuyerStatsPanel(buyers,this);
+
 
         SwingUtilities.invokeLater(() -> {
-            // === Window 1: Market Graph ===
+
             CustomWindowPanel marketWindow = new CustomWindowPanel(arrowPanel,true,"Stock Market");
             marketWindow.showWindow(); // This shows your main stock window
 
-            // === Window 2: Buyers panel ===
-            CustomWindowPanel simTradeWindow = new CustomWindowPanel(buyersPanel,false,"Simulated Trading Window");
-            simTradeWindow.showWindow(); // This shows your simulated trading panel
-            simTradeWindow.setWindowSize(300, 500);
         });
 
 
@@ -397,6 +392,10 @@ public class StockMarket extends Unit {
             }
             Now++;
         }
+    }
+
+    public List<Buyer> getBuyers() {
+        return buyers;
     }
 
     public static void main(String[] args) {
