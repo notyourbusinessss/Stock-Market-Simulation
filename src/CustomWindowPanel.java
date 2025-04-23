@@ -84,7 +84,12 @@ public class CustomWindowPanel extends JPanel {
     }
 
     public void showWindow() {
-        SwingUtilities.invokeLater(() -> frame.setVisible(true));
+        if (!frame.isVisible()) {
+            SwingUtilities.invokeLater(() -> frame.setVisible(true));
+        }
+    }
+    public void hideWindow() {
+        frame.setVisible(false);
     }
 
     private void toggleFullscreen() {
@@ -127,4 +132,12 @@ public class CustomWindowPanel extends JPanel {
         // Fallback
         return ge.getDefaultScreenDevice();
     }
+
+    public boolean isWindowVisible() {
+        return frame.isVisible();
+    }
+    public void setWindowSize(int width, int height) {
+        frame.setSize(width, height);
+    }
+
 }

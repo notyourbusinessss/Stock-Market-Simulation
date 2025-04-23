@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Random;
 
 public class Buyer extends Unit implements StockObserver {
+    private double totalSpent = 0;
+    private double totalEarned = 0;
     boolean speak = true;
     /**
      * Base trust is the trust someone will have in a certain market
@@ -45,6 +47,7 @@ public class Buyer extends Unit implements StockObserver {
         this.baseTrust = baseTrust;
         this.activity = activity;
         stockMarket.TrackedStock.addObserver(this);
+        stockMarket.addBuyer(this);
     }
 
     void removeholding(int amount){
@@ -201,6 +204,7 @@ public class Buyer extends Unit implements StockObserver {
                     System.out.println(name + " Sold " + soldAmount + " shares at a price of " +
                             stockMarket.getCurrentPrice() + " totaling at: " +
                             (stockMarket.getCurrentPrice() * soldAmount) + " | Capital: " + Capital);
+                    totalSpent += soldAmount*stockMarket.getCurrentPrice();
                 }
                 break;
             case 2:
@@ -213,6 +217,7 @@ public class Buyer extends Unit implements StockObserver {
                         System.out.println(name + " bought " + buyAmount + " shares at a price of " +
                                 stockMarket.getCurrentPrice() + " | Cost: " + cost + " | Capital: " + Capital);
                     }
+                    totalEarned += buyAmount*stockMarket.getCurrentPrice();
                 } else if (speak) {
                     System.out.println(name + " wanted to buy but couldn't afford. Needed: " + cost + " | Has: " + Capital);
                 }
@@ -276,4 +281,20 @@ public class Buyer extends Unit implements StockObserver {
         }
     }
 
+    public double getCapital() {
+        return Capital;
+    }
+
+
+    public int getHolding() {
+        return holding;
+    }
+
+    public double getNetProfit() {
+        return totalEarned - totalSpent;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

@@ -66,7 +66,7 @@ public class StockMarket extends Unit {
     private int nextMajorEventTick = 0;
     private final Random rand = new Random();
 
-
+    private final List<Buyer> buyers = new ArrayList<>();
 
     int AmountSold = 0;
     int AmountBought = 0;
@@ -299,14 +299,14 @@ public class StockMarket extends Unit {
             String message = positiveEvents[rand.nextInt(positiveEvents.length)];
             lastNews = message;
             System.out.printf("Positive Market Event: %s\n", message);
-            lastNews += String.format("Stock increased by %.2f%%",severity*100);
+            lastNews += String.format(" Stock increased by %.2f%%",severity*100);
             System.out.printf("Stock increased by %.2f%% → New price: %.2f\n", severity * 100, MarketPrice);
             marketBias += 0.3;
         } else {
             String message = negativeEvents[rand.nextInt(negativeEvents.length)];
             lastNews = message;
             System.out.printf("Negative Market Event: %s\n", message);
-            lastNews += String.format("Stock decreased by %.2f%%",severity*100);
+            lastNews += String.format(" Stock decreased by %.2f%%",severity*100);
             System.out.printf("Stock decreased by %.2f%% → New price: %.2f\n", severity * 100, MarketPrice);
             marketBias -= 0.3;
         }
@@ -317,7 +317,9 @@ public class StockMarket extends Unit {
 
     }
 
-
+    public void addBuyer(Buyer buyer) {
+        buyers.add(buyer);
+    }
 
     @Override
     public void performAction() {}
@@ -325,39 +327,46 @@ public class StockMarket extends Unit {
     @Override
     public void submitStatistics() {}
 
+
+
     @Override
     public void run() {
+        Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        this.avalibleShares -= buyer1.holding;
+        //buyer1.speak = false;
+        Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 100, 50);
+        this.avalibleShares -= buyer2.holding;
+        //RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "Random -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        //RandomBuyer buyer4 = new RandomBuyer(new SimulationInput(), "Random -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        Thread A = new Thread(buyer1);
+        Thread B = new Thread(buyer2);
+        //Thread C = new Thread(buyer3);
+        //Thread D = new Thread(buyer4);
+        A.start();
+        B.start();
+        //C.start();
+        //D.start();
+
+
+
+
         //System.out.println("setting");
         ArrowPanel arrowPanel = new ArrowPanel(this);
-        SimulatedTradePanel simPanel = new SimulatedTradePanel(this);
+        BuyerStatsPanel buyersPanel = new BuyerStatsPanel(buyers,this);
 
         SwingUtilities.invokeLater(() -> {
             // === Window 1: Market Graph ===
             CustomWindowPanel marketWindow = new CustomWindowPanel(arrowPanel,true,"Stock Market");
             marketWindow.showWindow(); // This shows your main stock window
 
-            // === Window 2: Simulated Trading ===
-            CustomWindowPanel simTradeWindow = new CustomWindowPanel(simPanel,false,"Simulated Trading Window");
+            // === Window 2: Buyers panel ===
+            CustomWindowPanel simTradeWindow = new CustomWindowPanel(buyersPanel,false,"Simulated Trading Window");
             simTradeWindow.showWindow(); // This shows your simulated trading panel
+            simTradeWindow.setWindowSize(300, 500);
         });
 
 
 
-        Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
-        this.avalibleShares -= buyer1.holding;
-        //buyer1.speak = false;
-        Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 100, 50);
-        this.avalibleShares -= buyer2.holding;
-        RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "Random -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
-        RandomBuyer buyer4 = new RandomBuyer(new SimulationInput(), "Random -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
-        Thread A = new Thread(buyer1);
-        Thread B = new Thread(buyer2);
-        Thread C = new Thread(buyer3);
-        Thread D = new Thread(buyer4);
-        A.start();
-        B.start();
-        C.start();
-        D.start();
 
         while (true || StockMarket.isOpen()) {
             try {
@@ -374,7 +383,7 @@ public class StockMarket extends Unit {
             updateStock();
 
             SwingUtilities.invokeLater(arrowPanel::updateLabel);
-            SwingUtilities.invokeLater(simPanel::updateLabels);
+            //SwingUtilities.invokeLater(simPanel::updateLabels);
 
             try {
                 Thread.sleep(waiting);

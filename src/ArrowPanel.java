@@ -6,6 +6,7 @@ import java.util.List;
 
 public class ArrowPanel extends JPanel {
     private final List<ScrollingNews> activeNews = new LinkedList<>();
+    private CustomWindowPanel customTradeWindow;
 
     private final int timediff = 10;
     private int MAXVALS = 500;
@@ -26,7 +27,7 @@ public class ArrowPanel extends JPanel {
     private double tempHigh = Double.MIN_VALUE;
     private double tempLow = Double.MAX_VALUE;
     private int tickCounter = 0;
-    private static final int TICKS_PER_CANDLE = 6;
+    private static final int TICKS_PER_CANDLE = 24;
 
     private int totalTicks = 0;
 
@@ -37,6 +38,22 @@ public class ArrowPanel extends JPanel {
     public ArrowPanel(StockMarket stockMarket) {
         this.stock = stockMarket;
         setLayout(new BorderLayout());
+
+        SimulatedTradePanel simPanel = new SimulatedTradePanel(stockMarket);
+        customTradeWindow = new CustomWindowPanel(simPanel, false, "Simulated Trading Window");
+
+        // Do NOT call showWindow() yet
+
+        JButton tradeToggleButton = new JButton("Toggle Trading UI");
+        tradeToggleButton.addActionListener(e -> {
+            if (!customTradeWindow.isWindowVisible()) {
+                customTradeWindow.showWindow();
+                customTradeWindow.setWindowSize(300, 500); // or any size you want
+
+            } else {
+                customTradeWindow.hideWindow();
+            }
+        });
 
         JPanel newsPanel = new JPanel() {
             @Override
@@ -72,7 +89,8 @@ public class ArrowPanel extends JPanel {
         // === RIGHT PANEL ===
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBackground(Color.BLACK);
-        rightPanel.setPreferredSize(new Dimension(120, 0));
+        rightPanel.setPreferredSize(new Dimension(180, 0)); // or try 200 for more space
+
 
         JPanel topPanel = new JPanel(new GridLayout(3, 1));
         topPanel.setBackground(Color.BLACK);
@@ -100,11 +118,13 @@ public class ArrowPanel extends JPanel {
         JButton toggleCandleButton = new JButton("Hide Candles");
         JButton toggleTrimButton = new JButton("Keep History");
 
-        for (JButton button : new JButton[]{upButton, downButton, pauseButton, toggleLineButton, toggleCandleButton, toggleTrimButton}) {
+
+        for (JButton button : new JButton[]{upButton, downButton, pauseButton, toggleLineButton, toggleCandleButton, toggleTrimButton,tradeToggleButton}) {
             button.setBackground(Color.BLACK);
             button.setForeground(Color.WHITE);
             button.setFocusPainted(false);
             button.setBorderPainted(false);
+            button.setPreferredSize(new Dimension(160, 30));
         }
 
         upButton.addActionListener(e -> stock.MarketPrice++);
@@ -130,7 +150,7 @@ public class ArrowPanel extends JPanel {
             toggleTrimButton.setText(trimHistory ? "Keep All History" : "Trim History");
         });
 
-        JPanel buttonPanel = new JPanel(new GridLayout(6, 1, 5, 5));
+        JPanel buttonPanel = new JPanel(new GridLayout(7, 1, 5, 5));
         buttonPanel.setBackground(Color.BLACK);
         buttonPanel.add(upButton);
         buttonPanel.add(downButton);
@@ -138,6 +158,11 @@ public class ArrowPanel extends JPanel {
         buttonPanel.add(toggleLineButton);
         buttonPanel.add(toggleCandleButton);
         buttonPanel.add(toggleTrimButton);
+        buttonPanel.add(tradeToggleButton);
+
+
+
+
 
         rightPanel.add(topPanel, BorderLayout.NORTH);
         rightPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -150,8 +175,13 @@ public class ArrowPanel extends JPanel {
             marketStateLabel.setText("Market: " + getMarketState());
 
             if (!stock.isPaused()) {
+
                 trackCandle(stock.MarketPrice);
                 totalTicks += timediff;
+
+                simPanel.updateLabels();
+
+
                 int years = totalTicks / (24 * 365);
                 int days = (totalTicks / 24) % 365;
                 int hours = totalTicks % 24;
@@ -185,7 +215,7 @@ public class ArrowPanel extends JPanel {
     private void trackCandle(double price) {
         if (trimHistory && priceHistory.size() > MAXVALS) {
             for (int i = 0; i < TICKS_PER_CANDLE; ++i) {
-                if (!priceHistory.isEmpty()) priceHistory.remove(0);
+                if (!priceHistory.isEmpty()) priceHistory.removeFirst();
             }
         }
         priceHistory.add(price);
@@ -233,7 +263,7 @@ public class ArrowPanel extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         int w = getWidth(), h = getHeight();
-        int paddingLeft = 40, paddingRight = 140, paddingTop = 20, paddingBottom = 40;
+        int paddingLeft = 40, paddingRight = 1, paddingTop = 20, paddingBottom = 40;
         int graphWidth = w - paddingLeft - paddingRight;
         int graphHeight = h - paddingTop - paddingBottom;
 
