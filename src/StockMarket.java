@@ -345,7 +345,7 @@ public class StockMarket extends Unit {
 
         Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
         this.avalibleShares -= buyer1.holding;
-        buyer1.speak = false;
+        //buyer1.speak = false;
         Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 100, 50);
         this.avalibleShares -= buyer2.holding;
         RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "Random -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
