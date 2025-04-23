@@ -5,11 +5,12 @@ public class CustomWindowPanel extends JPanel {
     private final boolean exitOnClose;
     private final JFrame frame;
     private boolean isFullscreen = false;
-    private Rectangle windowedBounds; // Store window size before going fullscreen
+    private Rectangle windowedBounds;
 
-    public CustomWindowPanel(JPanel innerContent, boolean exitOnClose,String titleGiven) {
+    public CustomWindowPanel(JPanel innerContent, boolean exitOnClose, String titleGiven) {
         super(new BorderLayout());
         this.exitOnClose = exitOnClose;
+
         // === Title Bar ===
         JPanel titleBar = new JPanel(new BorderLayout());
         titleBar.setBackground(Color.BLACK);
@@ -20,23 +21,15 @@ public class CustomWindowPanel extends JPanel {
         title.setFont(new Font("Arial", Font.BOLD, 12));
 
         JButton close = new JButton("✕");
-        close.setForeground(Color.WHITE);
-        close.setBackground(Color.BLACK);
-        close.setBorder(null);
-        close.setFocusPainted(false);
-
-        JButton fullscreenToggle = new JButton("⛶"); // Unicode full screen symbol
-        fullscreenToggle.setForeground(Color.WHITE);
-        fullscreenToggle.setBackground(Color.BLACK);
-        fullscreenToggle.setBorder(null);
-        fullscreenToggle.setFocusPainted(false);
-
+        JButton fullscreenToggle = new JButton("⛶");
         JButton minimize = new JButton("—");
-        minimize.setForeground(Color.WHITE);
-        minimize.setBackground(Color.BLACK);
-        minimize.setBorder(null);
-        minimize.setFocusPainted(false);
 
+        for (JButton button : new JButton[]{close, fullscreenToggle, minimize}) {
+            button.setForeground(Color.WHITE);
+            button.setBackground(Color.BLACK);
+            button.setBorder(null);
+            button.setFocusPainted(false);
+        }
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 2));
         buttons.setOpaque(false);
@@ -95,18 +88,18 @@ public class CustomWindowPanel extends JPanel {
     }
 
     private void toggleFullscreen() {
-        GraphicsConfiguration config = frame.getGraphicsConfiguration();
-        GraphicsDevice device = config.getDevice();
+        GraphicsDevice device = getCurrentGraphicsDevice();
 
         if (!isFullscreen) {
             windowedBounds = frame.getBounds();
+            Rectangle bounds = device.getDefaultConfiguration().getBounds();
+
             frame.dispose();
             frame.setUndecorated(true);
+            frame.setBounds(bounds); // simulate fullscreen
             frame.setVisible(true);
-            device.setFullScreenWindow(frame);
             isFullscreen = true;
         } else {
-            device.setFullScreenWindow(null);
             frame.dispose();
             frame.setUndecorated(true);
             frame.setBounds(windowedBounds);
@@ -115,4 +108,23 @@ public class CustomWindowPanel extends JPanel {
         }
     }
 
+    private GraphicsDevice getCurrentGraphicsDevice() {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice[] devices = ge.getScreenDevices();
+
+        for (GraphicsDevice device : devices) {
+            GraphicsConfiguration config = device.getDefaultConfiguration();
+            Rectangle bounds = config.getBounds();
+            try {
+                Point location = frame.getLocationOnScreen();
+                if (bounds.contains(location)) {
+                    return device;
+                }
+            } catch (IllegalComponentStateException ignored) {
+            }
+        }
+
+        // Fallback
+        return ge.getDefaultScreenDevice();
+    }
 }

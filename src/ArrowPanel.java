@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ArrowPanel extends JPanel {
-
+    private final int timediff = 10;
     private int MAXVALS = 500;
     private JButton pauseButton, upButton, downButton;
     private JLabel valueLabel, marketStateLabel, timeLabel;
@@ -110,13 +110,13 @@ public class ArrowPanel extends JPanel {
         add(rightPanel, BorderLayout.EAST);
         setBackground(new Color(15, 15, 15));
 
-        new Timer(StockMarket.waiting * 10, (ActionEvent e) -> {
+        new Timer(StockMarket.waiting * timediff, (ActionEvent e) -> {
             updateLabel();
             marketStateLabel.setText("Market: " + getMarketState());
 
             if (!stock.isPaused()) {
                 trackCandle(stock.MarketPrice);
-                totalTicks += 10;
+                totalTicks += timediff;
                 int years = totalTicks / (24 * 365);
                 int days = (totalTicks / 24) % 365;
                 int hours = totalTicks % 24;

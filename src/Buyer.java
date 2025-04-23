@@ -99,7 +99,7 @@ public class Buyer extends Unit implements StockObserver {
         int randomness = new Random().nextInt(21) - 10; // [-10, +10]
         double confidence = 0; // Will be adjusted below
 
-        trendScore *= 100;
+        //trendScore *= 100;
         System.out.println("\t\t percentage: " + "???" + "Market Trend : " + stockMarket.getMarketTrend(getLookbackHours()) + "Market score : " + trendScore );
         if (trendScore <= -75) {
             // Low trust panic sells, high trust tries to "buy the dip"
@@ -232,6 +232,7 @@ public class Buyer extends Unit implements StockObserver {
     public void run() {
         System.out.println("\t\t Running Buyer");
         while (StockMarket.isOpen()) {
+            /// Fix this
             if(Capital < 0 ){
                 Capital = 0;
             }
