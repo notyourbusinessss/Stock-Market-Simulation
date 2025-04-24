@@ -4,6 +4,20 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
 
+/**
+ * BuyerStatsPanel is a Swing-based UI panel that displays detailed statistics
+ * for individual buyers in a stock market simulation.
+ *
+ * It includes a dropdown to select a buyer and displays real-time stats such as:
+ * - Starting Net Worth
+ * - Capital
+ * - Net Profit
+ * - Estimated Net Worth
+ * - Net Worth Change
+ * - Shares Held
+ *
+ * Stats update every second using a Swing Timer.
+ */
 public class BuyerStatsPanel extends JPanel {
 
     private final List<Buyer> buyers;
@@ -12,6 +26,12 @@ public class BuyerStatsPanel extends JPanel {
     private final JComboBox<String> buyerSelector;
     private final JLabel statLabel;
 
+    /**
+     * Constructs a BuyerStatsPanel for monitoring the performance of buyers in the market.
+     *
+     * @param buyers       a list of Buyer objects to track
+     * @param stockMarket  reference to the StockMarket used for current price lookups
+     */
     public BuyerStatsPanel(List<Buyer> buyers, StockMarket stockMarket) {
         this.buyers = buyers;
         this.stockMarket = stockMarket;
@@ -58,14 +78,24 @@ public class BuyerStatsPanel extends JPanel {
 
         refreshData(); // initial display
 
+        // Timer to auto-refresh stats every second
         refreshTimer = new Timer(1000, e -> refreshData());
         refreshTimer.start();
     }
 
+    /**
+     * Called when a new buyer is selected from the dropdown. Triggers a stats refresh.
+     *
+     * @param e the action event (not used)
+     */
     private void onBuyerSelected(ActionEvent e) {
         refreshData();
     }
 
+    /**
+     * Gathers statistics from the selected buyer and updates the display.
+     * Colors values red if they are negative for clear visual feedback.
+     */
     private void refreshData() {
         String selectedBuyerName = (String) buyerSelector.getSelectedItem();
         Buyer selectedBuyer = buyers.stream()
@@ -84,7 +114,7 @@ public class BuyerStatsPanel extends JPanel {
             String capitalColor = capital < 0 ? "red" : "white";
             String profitColor = netProfit < 0 ? "red" : "white";
             String worthColor = netWorth < 0 ? "red" : "white";
-            String sharesColor = shares < 0 ? "red" : "white"; // Just in case
+            String sharesColor = shares < 0 ? "red" : "white";
             String NetWorthChangeColor = NetworthChange < 0 ? "red" : "white";
 
             statLabel.setText(String.format(
@@ -102,14 +132,16 @@ public class BuyerStatsPanel extends JPanel {
                     capitalColor, capital,
                     profitColor, netProfit,
                     worthColor, netWorth,
-                    NetWorthChangeColor,NetworthChange,
+                    NetWorthChangeColor, NetworthChange,
                     sharesColor, shares
             ));
         }
     }
 
-
-
+    /**
+     * Stops the periodic refresh of buyer statistics.
+     * Useful when the panel is being closed or replaced.
+     */
     public void stopRefreshing() {
         refreshTimer.stop();
     }
