@@ -43,7 +43,8 @@ This is pretty simple you can chose which buyer to look on their stats. simply c
 
 
 ## Design Patterns
-1. ### 
+1. ### Singleton 
+The First Design Pattern i made was the 
 2. ###
 3. ###
 4. ###
