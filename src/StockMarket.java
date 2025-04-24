@@ -212,6 +212,7 @@ public class StockMarket extends Unit {
     static int Now;
     static boolean open = true;
     static String lastNews;
+    private int initalShares;
 
     public StockMarket(SimulationInput input) {
         super(input);
@@ -227,6 +228,7 @@ public class StockMarket extends Unit {
         Stocks.add(TrackedStock);
         nextMajorEventTick = rand.nextInt(1001) + 500; // [500, 1500]
         lastNews =String.format("Company makes Debut on stock market with a Starting price of %.2f$",MarketPrice);
+        initalShares = totalShares;
     }
 
     public void togglePause() {
@@ -262,7 +264,7 @@ public class StockMarket extends Unit {
         if (avalibleShares >= amount && amount > 0) {
             avalibleShares -= amount;
             buyer.addholding(amount);
-            buyer.Capital -= amount * this.MarketPrice;
+            buyer.Capital -= amount * this.MarketPrice*1.05;
             wasBuy = true;
             AmountBought += amount;
         }
@@ -273,7 +275,7 @@ public class StockMarket extends Unit {
         if (amount > 0) {
             buyer.removeholding(amount);
             avalibleShares += amount;
-            buyer.Capital += amount * this.MarketPrice;
+            buyer.Capital += amount * this.MarketPrice*0.95;
             wasSell = true;
             AmountSold += amount;
         }
@@ -323,7 +325,7 @@ public class StockMarket extends Unit {
 
         // Market sentiment bias
         if (!wasBuy && !wasSell) {
-            priceChange += 0.005 * marketBias;
+            priceChange += 0.003 * (marketBias + 0.1);
         } else {
             priceChange += 0.01 * marketBias;
         }
@@ -373,8 +375,11 @@ public class StockMarket extends Unit {
         AmountBought = 0;
 
 
-        // === Slowly decay market bias toward neutrality ===
-        marketBias *= 0.95; // 5% decay per tick
+        if (!wasBuy && !wasSell) {
+            marketBias *= 0.98;
+        } else {
+            marketBias *= 0.99;
+        }
     }
 
 
@@ -406,6 +411,10 @@ public class StockMarket extends Unit {
 
         // Scale severity
         double severity = 0.05 + rand.nextDouble() * 0.15; // [0.05, 0.20]
+        // Clamp negative severity
+        if (eventImpact < 0) {
+            severity *= 0.6; // Reduce crash impact
+        }
         double priceChange = MarketPrice * severity * eventImpact;
 
         // Apply change
@@ -424,14 +433,14 @@ public class StockMarket extends Unit {
             lastNews = message;
             System.out.printf("Positive Market Event: %s\n", message);
             lastNews += String.format(" Stock increased by %.2f%%",severity*100);
-            System.out.printf("Stock increased by %.2f%% → New price: %.2f\n", severity * 100, MarketPrice);
+            System.out.printf("Stock increased by %.2f%% → New price: %.2f\n Market biase : %f\n", severity * 100, MarketPrice,marketBias);
             marketBias += severity;
         } else {
             String message = negativeEvents[rand.nextInt(negativeEvents.length)];
             lastNews = message;
             System.out.printf("Negative Market Event: %s\n", message);
             lastNews += String.format(" Stock decreased by %.2f%%",severity*100);
-            System.out.printf("Stock decreased by %.2f%% → New price: %.2f\n", severity * 100, MarketPrice);
+            System.out.printf("Stock decreased by %.2f%% → New price: %.2f\n Market biase : %f\n", severity * 100, MarketPrice,marketBias);
             marketBias -= severity;
         }
 
@@ -455,7 +464,7 @@ public class StockMarket extends Unit {
 
     @Override
     public void run() {
-        Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 70);
+        Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 100, 80);
         this.avalibleShares -= buyer1.holding;
         buyer1.speak = false;
         Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 70, 50);
@@ -463,7 +472,7 @@ public class StockMarket extends Unit {
         buyer2.speak = false;
         Buyer buyer3 = new Buyer(new SimulationInput(), "Adam -3-", (int) (this.avalibleShares * 0.1), this, 0, 80);// because of extremly high activity he will buy and sell A LOT, bassically day trader
         this.avalibleShares -= buyer3.holding;
-        //buyer3.speak = false;
+        buyer3.speak = false;
         Buyer buyer4 = new Buyer(new SimulationInput(), "Eve -4-", (int) (this.avalibleShares * 0.1), this, 0, 0);
         this.avalibleShares -= buyer4.holding;
         buyer4.speak = false;
@@ -535,4 +544,7 @@ public class StockMarket extends Unit {
         A.start();
     }
 
+    public double getTotalShares() {
+        return initalShares;
+    }
 }

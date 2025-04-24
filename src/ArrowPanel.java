@@ -12,13 +12,14 @@ public class ArrowPanel extends JPanel {
     private int MAXVALS = 500;
     private JButton pauseButton, upButton, downButton;
     private JLabel valueLabel, marketStateLabel, timeLabel;
-    private JLabel newsLabel;
+    private JLabel marketCapLabel;
+
 
     private StockMarket stock;
     Color Background = new Color(15, 15, 15);
     private boolean showLine = true;
     private boolean showCandles = true;
-    private boolean trimHistory = true;
+    private boolean trimHistory = false;
 
     private List<Double> priceHistory = new LinkedList<>();
     private List<Candle> candleHistory = new LinkedList<>();
@@ -60,7 +61,7 @@ public class ArrowPanel extends JPanel {
         statstogglebutton.addActionListener(e -> {
             if (!buyersStatsWindow.isWindowVisible()) {
                 buyersStatsWindow.showWindow();
-                buyersStatsWindow.setWindowSize(300, 500); // or any size you want
+                buyersStatsWindow.setWindowSize(300, 300); // or any size you want
 
             } else {
                 buyersStatsWindow.hideWindow();
@@ -104,7 +105,7 @@ public class ArrowPanel extends JPanel {
         rightPanel.setPreferredSize(new Dimension(180, 0)); // or try 200 for more space
 
 
-        JPanel topPanel = new JPanel(new GridLayout(3, 1));
+        JPanel topPanel = new JPanel(new GridLayout(4, 1));
         topPanel.setBackground(Color.BLACK);
 
         valueLabel = new JLabel(String.format("%.2f", stock.MarketPrice), SwingConstants.CENTER);
@@ -118,8 +119,13 @@ public class ArrowPanel extends JPanel {
         timeLabel = new JLabel("Time: Year:0 Day:0 Hour:0", SwingConstants.CENTER);
         timeLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         timeLabel.setForeground(Color.LIGHT_GRAY);
+        marketStateLabel = new JLabel("Market: Stable", SwingConstants.CENTER);
+        marketCapLabel = new JLabel(String.format("Market Cap: $%.2f",stock.getCurrentPrice() * stock.getTotalShares()), SwingConstants.CENTER);
+        marketCapLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        marketCapLabel.setForeground(Color.LIGHT_GRAY);
 
         topPanel.add(valueLabel);
+        topPanel.add(marketCapLabel);
         topPanel.add(marketStateLabel);
         topPanel.add(timeLabel);
 
@@ -218,6 +224,9 @@ public class ArrowPanel extends JPanel {
             }
 
 
+
+
+
             repaint();
         }).start();
     }
@@ -252,6 +261,10 @@ public class ArrowPanel extends JPanel {
 
     public void updateLabel() {
         valueLabel.setText(String.format("%.2f $", stock.MarketPrice));
+
+        // Market cap = price × total shares
+        double marketCap = stock.getCurrentPrice() * stock.getTotalShares();
+        marketCapLabel.setText(String.format("Market Cap: $%,.2f", marketCap));
     }
 
     private String getMarketState() {
@@ -324,7 +337,6 @@ public class ArrowPanel extends JPanel {
             g2.drawLine(x, h - paddingBottom, x, h - paddingBottom + 4);
             g2.drawString("-" + hoursAgo + "H", x - 15, h - paddingBottom + 15);
         }
-
 
 
 

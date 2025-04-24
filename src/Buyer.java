@@ -6,8 +6,8 @@ import java.util.Random;
 
 public class Buyer extends Unit implements StockObserver {
     private long lastTradeTime = 0;
-    private static final long MIN_COOLDOWN = 100;   // very active → 100ms
-    private static final long MAX_COOLDOWN = 1000;  // very passive → 1000ms
+    private static final long MIN_COOLDOWN = StockMarket.waiting*10;   // very active → 100ms
+    private static final long MAX_COOLDOWN = StockMarket.waiting*100;  // very passive → 1000ms
     private double totalSpent = 0;
     private double totalEarned = 0;
     public final double StartNetWorth;
