@@ -453,6 +453,10 @@ public class StockMarket extends Unit {
     public void addBuyer(Buyer buyer) {
         buyers.add(buyer);
     }
+    public void decreaseAvalibleShares(int amount) {
+        this.avalibleShares -= amount;
+    }
+
 
     @Override
     public void performAction() {}
@@ -464,34 +468,26 @@ public class StockMarket extends Unit {
 
     @Override
     public void run() {
-        Buyer buyer1 = new Buyer(this.getSimInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 100, 80);
-        this.avalibleShares -= buyer1.holding;
-        buyer1.speak = false;
-        Buyer buyer2 = new Buyer(this.getSimInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 70, 50);
-        this.avalibleShares -= buyer2.holding;
-        buyer2.speak = false;
-        Buyer buyer3 = new Buyer(this.getSimInput(), "Adam -3-", (int) (this.avalibleShares * 0.1), this, 0, 80);// because of extremly high activity he will buy and sell A LOT, bassically day trader
-        this.avalibleShares -= buyer3.holding;
-        buyer3.speak = false;
-        Buyer buyer4 = new Buyer(this.getSimInput(), "Eve -4-", (int) (this.avalibleShares * 0.1), this, 0, 0);
-        this.avalibleShares -= buyer4.holding;
-        buyer4.speak = false;
-        Buyer buyer5 = new Buyer(this.getSimInput(), "Normal Dude -5-",  (10), this, 0, 60);
-        buyer5.MakeNormal();
-        this.avalibleShares -= buyer5.holding;
-        buyer5.speak = false;
-        //RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "General Market -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
-        //RandomBuyer buyer4 = new RandomBuyer(new SimulationInput(), "General Market -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        BuyerFactory factory = new BuyerFactory(this);
+
+        Buyer buyer1 = factory.createBuyer("George -1-", 0.1, 100, 80, false, false);
+        Buyer buyer2 = factory.createBuyer("Mark -2-", 0.1, 70, 50, false, false);
+        Buyer buyer3 = factory.createBuyer("Adam -3-", 0.1, 0, 80, false, false); // Day trader
+        Buyer buyer4 = factory.createBuyer("Eve -4-", 0.1, 0, 0, false, false);
+        Buyer buyer5 = factory.createBuyer("Normal Dude -5-", 10.0 / this.avalibleShares, 0, 60, true, false); // Exact share count
+
         Thread A = new Thread(buyer1);
         Thread B = new Thread(buyer2);
         Thread C = new Thread(buyer3);
         Thread D = new Thread(buyer4);
         Thread E = new Thread(buyer5);
+
         A.start();
         B.start();
         C.start();
         D.start();
         E.start();
+
 
 
 
