@@ -109,7 +109,7 @@ public class ArrowPanel extends JPanel {
         BuyerStatsPanel StatsPanel = new BuyerStatsPanel(stockMarket.getBuyers(),stockMarket);
         buyersStatsWindow = new CustomWindowPanel(StatsPanel,false,"Buyers current Statistics");
 
-        // === Button to toggle the trade window ===
+        // Button to toggle the trade window
         JButton tradeToggleButton = new JButton("Toggle Trading UI");
         tradeToggleButton.addActionListener(e -> {
             if (!customTradeWindow.isWindowVisible()) {
@@ -150,7 +150,7 @@ public class ArrowPanel extends JPanel {
         newsPanel.setPreferredSize(new Dimension(0, 25));
         add(newsPanel, BorderLayout.NORTH);
 
-        // === Timer to scroll the news messages ===
+        // Timer to scroll the news messages
         newsScrollTimer = new Timer(30, e -> {
             synchronized (activeNews) {
                 activeNews.removeIf(sn -> sn.x + getFontMetrics(new Font("Arial", Font.BOLD, 12)).stringWidth("News: " + sn.message) < 0);
@@ -192,7 +192,7 @@ public class ArrowPanel extends JPanel {
         topPanel.add(marketStateLabel);
         topPanel.add(timeLabel);
 
-        // === Button Controls ===
+        // Button Controls
         upButton = new JButton("↑");
         downButton = new JButton("↓");
         pauseButton = new JButton("Pause");
@@ -409,57 +409,90 @@ public class ArrowPanel extends JPanel {
         int totalGraphHours = totalTicks;
         g2.setColor(Color.GRAY);
         g2.setFont(new Font("Arial", Font.PLAIN, 10));
+        // Draw X-axis labels and tick marks for time divisions
         for (int i = 0; i <= divisions; i++) {
+            // Calculate the x position of this tick mark
             int x = paddingLeft + (graphWidth * i) / divisions;
+
+            // Calculate how many hours ago this tick represents
             int hoursAgo = ((divisions - i) * totalGraphHours) / divisions;
+
+            // Draw a small vertical tick mark on the x-axis
             g2.drawLine(x, h - paddingBottom, x, h - paddingBottom + 4);
+
+            // Draw the label (e.g., "-10H") under the tick mark
             g2.drawString("-" + hoursAgo + "H", x - 15, h - paddingBottom + 15);
         }
 
-        // draw line graph
+        // Draw line graph connecting price history if line view is enabled
         if (showLine) {
-            g2.setColor(Color.CYAN);
+            g2.setColor(Color.CYAN); // Line graph color
             for (int i = 0; i < renderPrices.size() - 1; i++) {
+                // Calculate x positions for two consecutive price points
                 int x1 = paddingLeft + (int) (i * spacing);
                 int x2 = paddingLeft + (int) ((i + 1) * spacing);
+
+                // Calculate y positions (inverted, since y=0 is top of screen)
                 int y1 = paddingTop + (int) ((max - renderPrices.get(i)) / range * graphHeight);
                 int y2 = paddingTop + (int) ((max - renderPrices.get(i + 1)) / range * graphHeight);
+
+                // Draw line between the two points
                 g2.drawLine(x1, y1, x2, y2);
             }
         }
 
-        // draw candlesticks
+        // Draw historical candlesticks if enabled
         if (showCandles) {
             for (int i = 0; i < candleHistory.size(); i++) {
                 Candle c = candleHistory.get(i);
+
+                // X position for this candlestick
                 int x = paddingLeft + (int) (i * TICKS_PER_CANDLE * candleSpacing + TICKS_PER_CANDLE / 2.0 * candleSpacing);
+
+                // Convert price data into screen Y coordinates
                 int yHigh = paddingTop + (int) ((max - c.high) / range * graphHeight);
                 int yLow = paddingTop + (int) ((max - c.low) / range * graphHeight);
                 int yOpen = paddingTop + (int) ((max - c.open) / range * graphHeight);
                 int yClose = paddingTop + (int) ((max - c.close) / range * graphHeight);
-                g2.setColor(Color.WHITE);
-                g2.drawLine(x, yHigh, x, yLow);
+
+                g2.setColor(Color.WHITE); // Wick color
+                g2.drawLine(x, yHigh, x, yLow); // Draw the wick (high to low)
+
+                // Draw the candle body (colored box between open and close)
                 int bodyTop = Math.min(yOpen, yClose);
-                int bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
+                int bodyHeight = Math.max(1, Math.abs(yClose - yOpen)); // Avoid 0-height
+
+                // Green if price went up, red if it went down
                 g2.setColor(c.close >= c.open ? Color.GREEN : Color.RED);
                 g2.fillRect(x - 2, bodyTop, 4, bodyHeight);
             }
 
-            // draw current forming candlestick
+            // Draw current forming candlestick (incomplete one)
             if (tickCounter > 0) {
+                // X position for the current candle being formed
                 int x = paddingLeft + (int) (candleHistory.size() * TICKS_PER_CANDLE * candleSpacing + tickCounter / 2.0 * candleSpacing);
+
+                // Get current stock price
                 double currentPrice = stock.MarketPrice;
+
+                // Convert temp candlestick values to Y coordinates
                 int yHigh = paddingTop + (int) ((max - tempHigh) / range * graphHeight);
                 int yLow = paddingTop + (int) ((max - tempLow) / range * graphHeight);
                 int yOpen = paddingTop + (int) ((max - tempOpen) / range * graphHeight);
                 int yClose = paddingTop + (int) ((max - currentPrice) / range * graphHeight);
-                g2.setColor(Color.WHITE);
-                g2.drawLine(x, yHigh, x, yLow);
+
+                g2.setColor(Color.WHITE); // Wick color
+                g2.drawLine(x, yHigh, x, yLow); // Wick from high to low
+
+                // Body of current forming candle
                 int bodyTop = Math.min(yOpen, yClose);
-                int bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
+                int bodyHeight = Math.max(1, Math.abs(yClose - yOpen)); // Prevent 0-height box
+
+                // Green if currently above open price, red otherwise
                 g2.setColor(currentPrice >= tempOpen ? Color.GREEN : Color.RED);
                 g2.fillRect(x - 2, bodyTop, 4, bodyHeight);
             }
         }
+
     }
 }

@@ -56,3 +56,7 @@ The Mediator pattern is used via [StockMarket](src/StockMarket.java) (or central
 
 5. ### Factory
 The Factory pattern is used to create instances of buyers. Depending on the simulation input or configuration, the factory can generate different types of buyers with specific strategies or trust levels. This simplifies object creation and encapsulates the logic.
+
+
+## Javadoc
+The JavaDoc has it's own little folder.
