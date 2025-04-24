@@ -35,7 +35,7 @@ here's what it looks like :\
 ![](Documents/TradingUI.png)
 
 - ### Toggle Stats UI
-
+![](Documents/StatsUI.png)
 
 
 
