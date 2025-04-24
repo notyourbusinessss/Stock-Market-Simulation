@@ -5,69 +5,133 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ArrowPanel extends JPanel {
+
+    /** List of currently active scrolling news messages. */
     private final List<ScrollingNews> activeNews = new LinkedList<>();
+
+    /** Trade panel window to display and interact with trading simulation. */
     private CustomWindowPanel customTradeWindow;
+
+    /** Stats panel window showing real-time statistics of buyers. */
     private CustomWindowPanel buyersStatsWindow;
+
+    /** Time interval multiplier for simulation updates. */
     private final int timediff = 10;
+
+    /** Maximum number of historical values stored for rendering. */
     private int MAXVALS = 500;
-    private JButton pauseButton, upButton, downButton;
-    private JLabel valueLabel, marketStateLabel, timeLabel;
+
+    /** Button to pause/resume the simulation. */
+    private JButton pauseButton;
+
+    /** Button to increase the market price manually. */
+    private JButton upButton;
+
+    /** Button to decrease the market price manually. */
+    private JButton downButton;
+
+    /** Displays current stock value. */
+    private JLabel valueLabel;
+
+    /** Displays current state of the market (e.g., Stable, Crashing). */
+    private JLabel marketStateLabel;
+
+    /** Displays simulated time (e.g., Year, Day, Hour). */
+    private JLabel timeLabel;
+
+    /** Displays calculated market capitalization. */
     private JLabel marketCapLabel;
 
-
+    /** Reference to the main stock market simulation object. */
     private StockMarket stock;
+
+    /** Background color for the UI panel. */
     Color Background = new Color(15, 15, 15);
+
+    /** Whether to show the line graph of price history. */
     private boolean showLine = true;
+
+    /** Whether to show candlestick chart. */
     private boolean showCandles = true;
+
+    /** Whether to trim historical data to improve performance. */
     private boolean trimHistory = false;
 
+    /** Historical raw price values for graph rendering. */
     private List<Double> priceHistory = new LinkedList<>();
+
+    /** Historical candlestick data derived from priceHistory. */
     private List<Candle> candleHistory = new LinkedList<>();
 
+    /** Temporary opening value used when creating a new candlestick. */
     private double tempOpen = -1;
+
+    /** Tracks the highest price since the last candlestick was created. */
     private double tempHigh = Double.MIN_VALUE;
+
+    /** Tracks the lowest price since the last candlestick was created. */
     private double tempLow = Double.MAX_VALUE;
+
+    /** Ticks counted since the last candlestick was added. */
     private int tickCounter = 0;
+
+    /** Number of simulation ticks that form one candlestick. */
     private static final int TICKS_PER_CANDLE = 24;
 
+    /** Total number of simulation ticks passed (for time tracking). */
     private int totalTicks = 0;
 
+    /** Last news message displayed (to avoid repetition). */
     private String lastDisplayedNews = "";
+
+    /** X-position used for horizontally scrolling news items. */
     private int newsX = getWidth();
+
+    /** Timer that drives the scrolling animation for news items. */
     private Timer newsScrollTimer;
 
+
+    /**
+     * Constructs the ArrowPanel with all visualization and control components initialized.
+     *
+     * @param stockMarket the stock market object to observe and interact with
+     */
     public ArrowPanel(StockMarket stockMarket) {
+        // Store the reference to the stock market
         this.stock = stockMarket;
         setLayout(new BorderLayout());
 
+        // Create and attach the simulated trade panel window
         SimulatedTradePanel simPanel = new SimulatedTradePanel(stockMarket);
         customTradeWindow = new CustomWindowPanel(simPanel, false, "Simulated Trading Window");
 
+        // Create and attach the buyer statistics panel window
         BuyerStatsPanel StatsPanel = new BuyerStatsPanel(stockMarket.getBuyers(),stockMarket);
         buyersStatsWindow = new CustomWindowPanel(StatsPanel,false,"Buyers current Statistics");
 
+        // === Button to toggle the trade window ===
         JButton tradeToggleButton = new JButton("Toggle Trading UI");
         tradeToggleButton.addActionListener(e -> {
             if (!customTradeWindow.isWindowVisible()) {
                 customTradeWindow.showWindow();
-                customTradeWindow.setWindowSize(300, 500); // or any size you want
-
+                customTradeWindow.setWindowSize(300, 500);
             } else {
                 customTradeWindow.hideWindow();
             }
         });
 
+        // Button to toggle the statistics window
         JButton statstogglebutton = new JButton("Toggle Stats UI");
         statstogglebutton.addActionListener(e -> {
             if (!buyersStatsWindow.isWindowVisible()) {
                 buyersStatsWindow.showWindow();
-                buyersStatsWindow.setWindowSize(300, 300); // or any size you want
-
+                buyersStatsWindow.setWindowSize(300, 300);
             } else {
                 buyersStatsWindow.hideWindow();
             }
         });
 
+        // Top panel for scrolling news ticker
         JPanel newsPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -86,7 +150,7 @@ public class ArrowPanel extends JPanel {
         newsPanel.setPreferredSize(new Dimension(0, 25));
         add(newsPanel, BorderLayout.NORTH);
 
-
+        // === Timer to scroll the news messages ===
         newsScrollTimer = new Timer(30, e -> {
             synchronized (activeNews) {
                 activeNews.removeIf(sn -> sn.x + getFontMetrics(new Font("Arial", Font.BOLD, 12)).stringWidth("News: " + sn.message) < 0);
@@ -98,13 +162,12 @@ public class ArrowPanel extends JPanel {
         });
         newsScrollTimer.start();
 
-
-        // === RIGHT PANEL ===
+        // RIGHT PANEL
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBackground(Color.BLACK);
-        rightPanel.setPreferredSize(new Dimension(180, 0)); // or try 200 for more space
+        rightPanel.setPreferredSize(new Dimension(180, 0));
 
-
+        // Top panel with stock labels
         JPanel topPanel = new JPanel(new GridLayout(4, 1));
         topPanel.setBackground(Color.BLACK);
 
@@ -119,7 +182,7 @@ public class ArrowPanel extends JPanel {
         timeLabel = new JLabel("Time: Year:0 Day:0 Hour:0", SwingConstants.CENTER);
         timeLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         timeLabel.setForeground(Color.LIGHT_GRAY);
-        marketStateLabel = new JLabel("Market: Stable", SwingConstants.CENTER);
+
         marketCapLabel = new JLabel(String.format("Market Cap: $%.2f",stock.getCurrentPrice() * stock.getTotalShares()), SwingConstants.CENTER);
         marketCapLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         marketCapLabel.setForeground(Color.LIGHT_GRAY);
@@ -129,6 +192,7 @@ public class ArrowPanel extends JPanel {
         topPanel.add(marketStateLabel);
         topPanel.add(timeLabel);
 
+        // === Button Controls ===
         upButton = new JButton("↑");
         downButton = new JButton("↓");
         pauseButton = new JButton("Pause");
@@ -136,8 +200,8 @@ public class ArrowPanel extends JPanel {
         JButton toggleCandleButton = new JButton("Hide Candles");
         JButton toggleTrimButton = new JButton("Keep History");
 
-
-        for (JButton button : new JButton[]{upButton, downButton, pauseButton, toggleLineButton, toggleCandleButton, toggleTrimButton,tradeToggleButton,statstogglebutton}) {
+        // Style the buttons
+        for (JButton button : new JButton[]{upButton, downButton, pauseButton, toggleLineButton, toggleCandleButton, toggleTrimButton, tradeToggleButton, statstogglebutton}) {
             button.setBackground(Color.BLACK);
             button.setForeground(Color.WHITE);
             button.setFocusPainted(false);
@@ -145,6 +209,7 @@ public class ArrowPanel extends JPanel {
             button.setPreferredSize(new Dimension(160, 30));
         }
 
+        // Attach button functionality
         upButton.addActionListener(e -> stock.MarketPrice++);
         downButton.addActionListener(e -> stock.MarketPrice--);
 
@@ -168,6 +233,7 @@ public class ArrowPanel extends JPanel {
             toggleTrimButton.setText(trimHistory ? "Keep All History" : "Trim History");
         });
 
+        // Panel for holding buttons vertically
         JPanel buttonPanel = new JPanel(new GridLayout(8, 1, 5, 5));
         buttonPanel.setBackground(Color.BLACK);
         buttonPanel.add(upButton);
@@ -179,24 +245,21 @@ public class ArrowPanel extends JPanel {
         buttonPanel.add(tradeToggleButton);
         buttonPanel.add(statstogglebutton);
 
-
+        // Add panels to the layout
         rightPanel.add(topPanel, BorderLayout.NORTH);
         rightPanel.add(buttonPanel, BorderLayout.SOUTH);
-
         add(rightPanel, BorderLayout.EAST);
         setBackground(Background);
 
+        // Main simulation update timer
         new Timer(StockMarket.waiting * timediff, (ActionEvent e) -> {
             updateLabel();
             marketStateLabel.setText("Market: " + getMarketState());
 
             if (!stock.isPaused()) {
-
                 trackCandle(stock.MarketPrice);
                 totalTicks += timediff;
-
                 simPanel.updateLabels();
-
 
                 int years = totalTicks / (24 * 365);
                 int days = (totalTicks / 24) % 365;
@@ -213,24 +276,23 @@ public class ArrowPanel extends JPanel {
                 synchronized (activeNews) {
                     for (ScrollingNews sn : activeNews) {
                         int messageWidth = fm.stringWidth("News: " + sn.message);
-                        // If still visible, offset the new one further to the right
                         if (sn.x + messageWidth > initialX - 20) {
                             initialX = sn.x + messageWidth + 20;
                         }
                     }
-
                     activeNews.add(new ScrollingNews(lastDisplayedNews, initialX));
                 }
             }
-
-
-
-
 
             repaint();
         }).start();
     }
 
+    /**
+     * Adds a new price point to the chart and builds candlestick data if enough ticks have passed.
+     *
+     * @param price the current stock price
+     */
     private void trackCandle(double price) {
         while(trimHistory && priceHistory.size() > MAXVALS) {
             for (int i = 0; i < TICKS_PER_CANDLE; ++i) {
@@ -257,7 +319,9 @@ public class ArrowPanel extends JPanel {
             tempLow = Double.MAX_VALUE;
         }
     }
-
+    /**
+     * Updates display labels such as market value and market cap.
+     */
     public void updateLabel() {
         valueLabel.setText(String.format("%.2f $", stock.MarketPrice));
 
@@ -266,6 +330,11 @@ public class ArrowPanel extends JPanel {
         marketCapLabel.setText(String.format("Market Cap: $%,.2f", marketCap));
     }
 
+    /**
+     * Computes the market state based on recent price changes.
+     *
+     * @return a string such as "Stable", "Rising", or "Crashing"
+     */
     private String getMarketState() {
         if (candleHistory.size() < 2) return "N/A";
         double recent = candleHistory.getLast().close;
@@ -279,22 +348,35 @@ public class ArrowPanel extends JPanel {
         return "Stable";
     }
 
+    /**
+     * Paints the graph, candlesticks, grid, and time labels.
+     * Handles both the line graph and candle view depending on user toggles.
+     *
+     * @param g the Graphics context used for drawing
+     */
     @Override
     protected void paintComponent(Graphics g) {
+        // base Swing painting
         super.paintComponent(g);
+
+        // do nothing if no data to draw
         if (priceHistory.size() < 1) return;
 
+        // cast to Graphics2D and enable anti-aliasing
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
+        // get dimensions and padding
         int w = getWidth(), h = getHeight();
         int paddingLeft = 40, paddingRight = 180, paddingTop = 20, paddingBottom = 40;
         int graphWidth = w - paddingLeft - paddingRight;
         int graphHeight = h - paddingTop - paddingBottom;
 
+        // combine price history and current price into one list
         List<Double> renderPrices = new LinkedList<>(priceHistory);
         renderPrices.add(stock.MarketPrice);
 
+        // find min and max for scaling
         double max = Math.max(
                 renderPrices.stream().mapToDouble(p -> p).max().orElse(1),
                 candleHistory.stream().mapToDouble(c -> c.high).max().orElse(1)
@@ -305,10 +387,12 @@ public class ArrowPanel extends JPanel {
         );
         double range = Math.max(max - min, 1);
 
+        // spacing between points on the graph
         double spacing = (double) graphWidth / (renderPrices.size() - 1);
         int totalTicks = candleHistory.size() * TICKS_PER_CANDLE + tickCounter;
         double candleSpacing = (double) graphWidth / Math.max(1, totalTicks);
 
+        // draw horizontal grid lines and y-axis labels
         g2.setFont(new Font("Arial", Font.PLAIN, 10));
         g2.setColor(new Color(255, 255, 255, 50));
         for (int i = 0; i <= 5; i++) {
@@ -320,26 +404,19 @@ public class ArrowPanel extends JPanel {
             g2.setColor(new Color(255, 255, 255, 50));
         }
 
-        // === Fixed Horizontal Time Axis (Labels change with simulation time) ===
-        int divisions = 8; // Number of tick marks
-        int totalGraphHours = totalTicks; // You can scale this if using different resolutions
-
+        // draw time axis labels
+        int divisions = 8;
+        int totalGraphHours = totalTicks;
         g2.setColor(Color.GRAY);
         g2.setFont(new Font("Arial", Font.PLAIN, 10));
-
         for (int i = 0; i <= divisions; i++) {
             int x = paddingLeft + (graphWidth * i) / divisions;
-
-            // Calculate time label from the right edge
             int hoursAgo = ((divisions - i) * totalGraphHours) / divisions;
-
             g2.drawLine(x, h - paddingBottom, x, h - paddingBottom + 4);
             g2.drawString("-" + hoursAgo + "H", x - 15, h - paddingBottom + 15);
         }
 
-
-
-        // Line graph
+        // draw line graph
         if (showLine) {
             g2.setColor(Color.CYAN);
             for (int i = 0; i < renderPrices.size() - 1; i++) {
@@ -351,7 +428,7 @@ public class ArrowPanel extends JPanel {
             }
         }
 
-        // Candlesticks
+        // draw candlesticks
         if (showCandles) {
             for (int i = 0; i < candleHistory.size(); i++) {
                 Candle c = candleHistory.get(i);
@@ -368,6 +445,7 @@ public class ArrowPanel extends JPanel {
                 g2.fillRect(x - 2, bodyTop, 4, bodyHeight);
             }
 
+            // draw current forming candlestick
             if (tickCounter > 0) {
                 int x = paddingLeft + (int) (candleHistory.size() * TICKS_PER_CANDLE * candleSpacing + tickCounter / 2.0 * candleSpacing);
                 double currentPrice = stock.MarketPrice;
