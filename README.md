@@ -4,14 +4,14 @@
 This project is a dynamic simulation of a simplified stock market environment, centered around a single stock and five distinct buyers, each with their own behavioral patterns.
 Each buyer has unique traits such as trust level and activity frequency, which influence their trading behavior. These factors—whether they are cautious long-term investors, reactive day traders, or unpredictable speculators—shape how they buy or sell stock in response to real-time market changes.
 The simulation also includes external events (e.g., news headlines) that can impact the stock's price, mimicking real-world volatility. Through this, the simulation models the interplay between individual decision-making and collective market dynamics, showcasing how buyer psychology and external influences drive stock fluctuations.
-
+---
 ## The UI
 Here is the Main UI :\
 ![](Documents/MainUI.png)\
 The UI has many different Parts to it : 
 
 - ### The news
-On the top of the UI will scroll from left ot right relevant events that happened to the Stock. it will say the news and how much it affected the stock itself.
+On the top of the UI will scrolls from left to right relevant events that happened to the Stock. it will say the news and how much it affected the stock itself.
 
 - ### The Top Right
 On the Top right we have 
@@ -42,7 +42,7 @@ no profit or loss since, no trade was made. You can also change the amount of st
 ![](Documents/StatsUI.png)\
 This is pretty simple you can chose which buyer to look on their stats. simply click on "track buyer:" and select the buyer you want.
 
-
+---
 
 ## Design Patterns
 1. ### Singleton 
@@ -57,4 +57,4 @@ The Mediator pattern is used via [StockMarket](src/StockMarket.java) (or central
 5. ### Factory
 The Factory pattern is used to create instances of buyers. Depending on the simulation input or configuration, the factory can generate different types of buyers with specific strategies or trust levels. This simplifies object creation and encapsulates the logic.
 
-### Stock market 
+---
