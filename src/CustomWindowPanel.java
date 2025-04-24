@@ -9,10 +9,27 @@ import java.awt.*;
  */
 public class CustomWindowPanel extends JPanel {
 
+    /**
+     * Determines whether the application should exit the simulation or close the frame when the close button is clicked.
+     */
     private final boolean exitOnClose;
+
+    /**
+     * The underlying JFrame that contains this panel and manages the window display.
+     */
     private final JFrame frame;
+
+    /**
+     * Indicates whether the window is currently in fullscreen mode.
+     */
     private boolean isFullscreen = false;
+
+    /**
+     * Stores the window's bounds before switching to fullscreen mode,
+     * so it can be restored when exiting fullscreen.
+     */
     private Rectangle windowedBounds;
+
 
     /**
      * Constructs a CustomWindowPanel with the given content and window behavior options.
