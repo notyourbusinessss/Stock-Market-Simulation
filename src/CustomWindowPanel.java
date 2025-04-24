@@ -1,17 +1,30 @@
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * CustomWindowPanel is a Swing component that provides a borderless window with
+ * a custom title bar and support for minimize, fullscreen toggle, and close buttons.
+ *
+ * It can wrap any other JPanel (`innerContent`) and display it in a stylized JFrame.
+ */
 public class CustomWindowPanel extends JPanel {
+
     private final boolean exitOnClose;
     private final JFrame frame;
     private boolean isFullscreen = false;
     private Rectangle windowedBounds;
 
+    /**
+     * Constructs a CustomWindowPanel with the given content and window behavior options.
+     *
+     * @param innerContent the JPanel to be embedded in the window
+     * @param exitOnClose  whether closing the window should exit the market/simulation
+     * @param titleGiven   the title text shown on the title bar
+     */
     public CustomWindowPanel(JPanel innerContent, boolean exitOnClose, String titleGiven) {
         super(new BorderLayout());
         this.exitOnClose = exitOnClose;
 
-        // === Title Bar ===
         JPanel titleBar = new JPanel(new BorderLayout());
         titleBar.setBackground(Color.BLACK);
         titleBar.setPreferredSize(new Dimension(800, 30));
@@ -40,7 +53,6 @@ public class CustomWindowPanel extends JPanel {
         titleBar.add(title, BorderLayout.WEST);
         titleBar.add(buttons, BorderLayout.EAST);
 
-        // === Drag Support ===
         final Point[] clickPoint = {null};
         titleBar.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent e) {
@@ -61,7 +73,6 @@ public class CustomWindowPanel extends JPanel {
         this.add(titleBar, BorderLayout.NORTH);
         this.add(innerContent, BorderLayout.CENTER);
 
-        // === Frame Setup ===
         this.frame = new JFrame();
         frame.setUndecorated(true);
         frame.setContentPane(this);
@@ -69,12 +80,10 @@ public class CustomWindowPanel extends JPanel {
         frame.setLocationRelativeTo(null);
         frame.setResizable(true);
 
-        // === Resize Support ===
         ResizeListener resizeListener = new ResizeListener(frame);
         frame.addMouseListener(resizeListener);
         frame.addMouseMotionListener(resizeListener);
 
-        // === Action Listeners ===
         close.addActionListener(e -> {
             if (exitOnClose) {
                 frame.dispose();
@@ -84,23 +93,32 @@ public class CustomWindowPanel extends JPanel {
                     throw new RuntimeException(ex);
                 }
                 StockMarket.CloseMarket();
-                //System.exit(0);
-            }
-            else frame.dispose();
+            } else frame.dispose();
         });
+
         minimize.addActionListener(e -> frame.setState(Frame.ICONIFIED));
         fullscreenToggle.addActionListener(e -> toggleFullscreen());
     }
 
+    /**
+     * Displays the window if it is not already visible.
+     */
     public void showWindow() {
         if (!frame.isVisible()) {
             SwingUtilities.invokeLater(() -> frame.setVisible(true));
         }
     }
+
+    /**
+     * Hides the window from view.
+     */
     public void hideWindow() {
         frame.setVisible(false);
     }
 
+    /**
+     * Toggles between fullscreen and windowed mode for the frame.
+     */
     private void toggleFullscreen() {
         GraphicsDevice device = getCurrentGraphicsDevice();
 
@@ -110,7 +128,7 @@ public class CustomWindowPanel extends JPanel {
 
             frame.dispose();
             frame.setUndecorated(true);
-            frame.setBounds(bounds); // simulate fullscreen
+            frame.setBounds(bounds);
             frame.setVisible(true);
             isFullscreen = true;
         } else {
@@ -122,6 +140,9 @@ public class CustomWindowPanel extends JPanel {
         }
     }
 
+    /**
+     * Returns the current graphics device (monitor) on which the frame is displayed.
+     */
     private GraphicsDevice getCurrentGraphicsDevice() {
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice[] devices = ge.getScreenDevices();
@@ -138,15 +159,25 @@ public class CustomWindowPanel extends JPanel {
             }
         }
 
-        // Fallback
         return ge.getDefaultScreenDevice();
     }
 
+    /**
+     * Checks if the window is currently visible.
+     *
+     * @return true if the frame is visible, false otherwise
+     */
     public boolean isWindowVisible() {
         return frame.isVisible();
     }
+
+    /**
+     * Sets the window size to a custom width and height.
+     *
+     * @param width  the new width of the frame
+     * @param height the new height of the frame
+     */
     public void setWindowSize(int width, int height) {
         frame.setSize(width, height);
     }
-
 }
