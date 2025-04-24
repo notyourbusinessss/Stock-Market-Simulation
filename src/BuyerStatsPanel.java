@@ -73,29 +73,36 @@ public class BuyerStatsPanel extends JPanel {
                 .findFirst().orElse(null);
 
         if (selectedBuyer != null) {
+            double startNetWorth = selectedBuyer.StartNetWorth;
             double netWorth = selectedBuyer.getCapital() + selectedBuyer.getHolding() * stockMarket.getCurrentPrice();
             double netProfit = selectedBuyer.getNetProfit();
             double capital = selectedBuyer.getCapital();
             int shares = selectedBuyer.getHolding();
+            double NetworthChange = netWorth - startNetWorth;
 
             // Set color based on value
             String capitalColor = capital < 0 ? "red" : "white";
             String profitColor = netProfit < 0 ? "red" : "white";
             String worthColor = netWorth < 0 ? "red" : "white";
             String sharesColor = shares < 0 ? "red" : "white"; // Just in case
+            String NetWorthChangeColor = NetworthChange < 0 ? "red" : "white";
 
             statLabel.setText(String.format(
                     "<html><div style='color:white;'>"
                             + "<b>%s</b><br/>"
+                            + "Starting NetWorth: %.2f<br/>"
                             + "Capital: <span style='color:%s;'>$%.2f</span><br/>"
                             + "Net Profit: <span style='color:%s;'>$%.2f</span><br/>"
                             + "Estimated Net Worth: <span style='color:%s;'>$%.2f</span><br/>"
+                            + "Net Worth Change: <span style='color:%s;'>$%.2f</span><br/>"
                             + "Shares Held: <span style='color:%s;'>%d</span>"
                             + "</div></html>",
                     selectedBuyer.getName(),
+                    startNetWorth,
                     capitalColor, capital,
                     profitColor, netProfit,
                     worthColor, netWorth,
+                    NetWorthChangeColor,NetworthChange,
                     sharesColor, shares
             ));
         }

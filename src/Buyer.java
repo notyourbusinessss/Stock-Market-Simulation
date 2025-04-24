@@ -5,8 +5,12 @@ import java.util.List;
 import java.util.Random;
 
 public class Buyer extends Unit implements StockObserver {
+    private long lastTradeTime = 0;
+    private static final long MIN_COOLDOWN = 100;   // very active → 100ms
+    private static final long MAX_COOLDOWN = 1000;  // very passive → 1000ms
     private double totalSpent = 0;
     private double totalEarned = 0;
+    public final double StartNetWorth;
     boolean speak = true;
     /**
      * Base trust is the trust someone will have in a certain market
@@ -37,6 +41,7 @@ public class Buyer extends Unit implements StockObserver {
 
     public Buyer(SimulationInput input) {
         super(input);
+        StartNetWorth = holding*stockMarket.getCurrentPrice() + Capital;
     }
     public Buyer(SimulationInput input, String name, int holding, StockMarket stockMarket, double baseTrust, double activity) {
         super(input);
@@ -48,7 +53,17 @@ public class Buyer extends Unit implements StockObserver {
         this.activity = activity;
         stockMarket.TrackedStock.addObserver(this);
         stockMarket.addBuyer(this);
+        StartNetWorth = holding*stockMarket.getCurrentPrice() + Capital;
     }
+    private long getTradeCooldownMillis() {
+        double ratio = activity / 100.0;
+        return (long)(MAX_COOLDOWN - (ratio * (MAX_COOLDOWN - MIN_COOLDOWN)));
+    }
+    private boolean canTrade() {
+        return System.currentTimeMillis() - lastTradeTime >= getTradeCooldownMillis();
+    }
+
+
 
     void removeholding(int amount){
         holding -= amount;
@@ -196,6 +211,7 @@ public class Buyer extends Unit implements StockObserver {
      */
     @Override
     public void performAction() {
+        if (!canTrade()) return;
         switch (makeDecision()) {
             case 1: // SELL
                 int soldAmount = getTransactionAmount(true);

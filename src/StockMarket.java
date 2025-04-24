@@ -463,7 +463,7 @@ public class StockMarket extends Unit {
         buyer2.speak = false;
         Buyer buyer3 = new Buyer(new SimulationInput(), "Adam -3-", (int) (this.avalibleShares * 0.1), this, 0, 80);// because of extremly high activity he will buy and sell A LOT, bassically day trader
         this.avalibleShares -= buyer3.holding;
-        buyer3.speak = false;
+        //buyer3.speak = false;
         Buyer buyer4 = new Buyer(new SimulationInput(), "Eve -4-", (int) (this.avalibleShares * 0.1), this, 0, 0);
         this.avalibleShares -= buyer4.holding;
         buyer4.speak = false;
