@@ -37,10 +37,16 @@ This shows everything that you have and the current price of the market for exam
 no profit or loss since, no trade was made. You can also change the amount of stocks you buy or sell at once by simply clicking and editing the Amount to simulate: 10 
 
 - ### Toggle Stats UI
-![](Documents/StatsUI.png)
+![](Documents/StatsUI.png)\
+This is pretty simple you can chose which buyer to look on their stats. simply click on "track buyer:" and select the buyer you want.
 
 
 
 ## Design Patterns
+1. ### 
+2. ###
+3. ###
+4. ###
+5. ###
 
 ### Stock market 
