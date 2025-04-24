@@ -10,13 +10,14 @@ import java.util.ArrayList;
  * */
 public class Matrix {
 	public static void run(SimulationInput input) {
-		// Run units
-		Robot rob = new Robot("Rob", input);
-		Thread trob = new Thread(rob);
+		StockMarket stockMarket = new StockMarket(new SimulationInput(), 1000, 50.00, 1000, 0);
+		Thread A = new Thread(stockMarket);
+		A.start();
 
-		trob.start();
-		try {
-			trob.join();
-		} catch (InterruptedException e) {}
-	}
+        try {
+            A.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

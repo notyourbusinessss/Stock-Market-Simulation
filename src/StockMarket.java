@@ -215,11 +215,11 @@ public class StockMarket extends Unit {
     private int initalShares;
 
     public StockMarket(SimulationInput input) {
-        super(input);
+        super("Market",input);
     }
 
     public StockMarket(SimulationInput input, int totalShares, double InitialPrice, int time, int now) {
-        super(input);
+        super("Market",input);
         this.avalibleShares = totalShares;
         this.MarketPrice = InitialPrice;
         this.Time = time;
@@ -260,22 +260,22 @@ public class StockMarket extends Unit {
         TrackedStock.ForcedStock(ForcedMarketPrices);
     }
 
-    public synchronized void buy(int amount, Buyer buyer) {
+    public void buy(int amount, Buyer buyer) {
         if (avalibleShares >= amount && amount > 0) {
             avalibleShares -= amount;
             buyer.addholding(amount);
-            buyer.Capital -= amount * this.MarketPrice*1.05;
+            buyer.Capital -= amount * this.MarketPrice;
             wasBuy = true;
             AmountBought += amount;
         }
     }
 
 
-    public synchronized void sell(int amount, Buyer buyer) {
+    public void sell(int amount, Buyer buyer) {
         if (amount > 0) {
             buyer.removeholding(amount);
             avalibleShares += amount;
-            buyer.Capital += amount * this.MarketPrice*0.95;
+            buyer.Capital += amount * this.MarketPrice;
             wasSell = true;
             AmountSold += amount;
         }
@@ -433,15 +433,15 @@ public class StockMarket extends Unit {
             lastNews = message;
             System.out.printf("Positive Market Event: %s\n", message);
             lastNews += String.format(" Stock increased by %.2f%%",severity*100);
+            marketBias += severity*100;
             System.out.printf("Stock increased by %.2f%% → New price: %.2f\n Market biase : %f\n", severity * 100, MarketPrice,marketBias);
-            marketBias += severity;
         } else {
             String message = negativeEvents[rand.nextInt(negativeEvents.length)];
             lastNews = message;
             System.out.printf("Negative Market Event: %s\n", message);
             lastNews += String.format(" Stock decreased by %.2f%%",severity*100);
+            marketBias -= severity*100;
             System.out.printf("Stock decreased by %.2f%% → New price: %.2f\n Market biase : %f\n", severity * 100, MarketPrice,marketBias);
-            marketBias -= severity;
         }
 
 
@@ -464,28 +464,34 @@ public class StockMarket extends Unit {
 
     @Override
     public void run() {
-        Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 100, 80);
+        Buyer buyer1 = new Buyer(this.getSimInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 100, 80);
         this.avalibleShares -= buyer1.holding;
         buyer1.speak = false;
-        Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 70, 50);
+        Buyer buyer2 = new Buyer(this.getSimInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 70, 50);
         this.avalibleShares -= buyer2.holding;
         buyer2.speak = false;
-        Buyer buyer3 = new Buyer(new SimulationInput(), "Adam -3-", (int) (this.avalibleShares * 0.1), this, 0, 80);// because of extremly high activity he will buy and sell A LOT, bassically day trader
+        Buyer buyer3 = new Buyer(this.getSimInput(), "Adam -3-", (int) (this.avalibleShares * 0.1), this, 0, 80);// because of extremly high activity he will buy and sell A LOT, bassically day trader
         this.avalibleShares -= buyer3.holding;
         buyer3.speak = false;
-        Buyer buyer4 = new Buyer(new SimulationInput(), "Eve -4-", (int) (this.avalibleShares * 0.1), this, 0, 0);
+        Buyer buyer4 = new Buyer(this.getSimInput(), "Eve -4-", (int) (this.avalibleShares * 0.1), this, 0, 0);
         this.avalibleShares -= buyer4.holding;
         buyer4.speak = false;
+        Buyer buyer5 = new Buyer(this.getSimInput(), "Normal Dude -5-",  (10), this, 0, 60);
+        buyer5.MakeNormal();
+        this.avalibleShares -= buyer5.holding;
+        buyer5.speak = false;
         //RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "General Market -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
         //RandomBuyer buyer4 = new RandomBuyer(new SimulationInput(), "General Market -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
         Thread A = new Thread(buyer1);
         Thread B = new Thread(buyer2);
         Thread C = new Thread(buyer3);
         Thread D = new Thread(buyer4);
+        Thread E = new Thread(buyer5);
         A.start();
         B.start();
         C.start();
         D.start();
+        E.start();
 
 
 
@@ -503,7 +509,7 @@ public class StockMarket extends Unit {
 
 
 
-        while (true || StockMarket.isOpen()) {
+        while (StockMarket.isOpen()) {
             try {
                 pauseLock.acquire();
                 pauseLock.release();
@@ -532,19 +538,48 @@ public class StockMarket extends Unit {
             }
             Now++;
         }
+        System.out.println("Stock Market is now closed");
+
+        // Stop buyers
+        for (Buyer buyer : buyers) {
+            buyer.submitStatistics();
+            buyer.Stop();
+        }
+
+        // Wait for threads to finish
+        try {
+            A.join();
+            B.join();
+            C.join();
+            D.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            for (Window w : Window.getWindows()) {
+                if (w instanceof JFrame) {
+                    w.dispose();
+                }
+            }
+        });
+
+        System.out.println("Stock Market is now closed");
+        return;
+    }
+    static public void CloseMarket(){
+        open = false;
     }
 
     public List<Buyer> getBuyers() {
         return buyers;
     }
 
-    public static void main(String[] args) {
-        StockMarket stockMarket = new StockMarket(new SimulationInput(), 1000, 50.00, 1000, 0);
-        Thread A = new Thread(stockMarket);
-        A.start();
-    }
 
     public double getTotalShares() {
         return initalShares;
+    }
+    public static void main(String[] args) {
+
     }
 }

@@ -232,13 +232,12 @@ public class ArrowPanel extends JPanel {
     }
 
     private void trackCandle(double price) {
-        if (trimHistory && priceHistory.size() > MAXVALS) {
+        while(trimHistory && priceHistory.size() > MAXVALS) {
             for (int i = 0; i < TICKS_PER_CANDLE; ++i) {
                 if (!priceHistory.isEmpty()) {
                     priceHistory.removeFirst();
                 }
             }
-            candleHistory.removeFirst();
         }
         priceHistory.add(price);
 
@@ -249,7 +248,7 @@ public class ArrowPanel extends JPanel {
 
         if (tickCounter >= TICKS_PER_CANDLE) {
             candleHistory.add(new Candle(tempOpen, price, tempHigh, tempLow));
-            if (trimHistory && candleHistory.size() > MAXVALS / TICKS_PER_CANDLE) {
+            while(trimHistory && candleHistory.size() > MAXVALS / TICKS_PER_CANDLE) {
                 candleHistory.removeFirst();
             }
             tickCounter = 0;

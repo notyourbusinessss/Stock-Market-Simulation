@@ -14,12 +14,6 @@ public abstract class Unit implements Runnable {
 	private SimulationInput input; // The input settings
 	private Statistics stats;
 
-	public Unit(SimulationInput input) {
-		
-		this("DefaultUnitName", input);
-		System.out.println("Creating Unit");
-	}
-
 	/**
 	 * General constructor for the Skeleton.Unit.
 	 * 

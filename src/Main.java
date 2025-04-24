@@ -62,7 +62,17 @@ public class Main {
 		// Initialize the stats singleton here so the input can
 		// be ignored in future calls
 		StatisticsContainer stats = StatisticsContainer.getInstance(input);
-		Matrix.run(input);
+		StockMarket market = new StockMarket(input, 1000, 50.0, 10000, 0);
+		Thread marketThread = new Thread(market);
+		marketThread.start();
+
+// Wait for market thread to finish
+		try {
+			marketThread.join();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+
 
 		return stats;
 	}
@@ -101,6 +111,8 @@ public class Main {
 		// Post the finalized statistics
 		stats.printStatisticsContainer();
 
+		System.out.println("Bye !!!!!!");
+		System.exit(0);
 		/*
 			Add many more tests below using different input. Try to probe for edge cases and organize
 			your tests properly.

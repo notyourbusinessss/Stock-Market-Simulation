@@ -4,13 +4,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-public class Buyer extends Unit implements StockObserver {
+public class Buyer extends Robot implements StockObserver {
     private long lastTradeTime = 0;
     private static final long MIN_COOLDOWN = StockMarket.waiting*10;   // very active → 100ms
     private static final long MAX_COOLDOWN = StockMarket.waiting*100;  // very passive → 1000ms
     private double totalSpent = 0;
     private double totalEarned = 0;
     public final double StartNetWorth;
+    private boolean stop = false;
     boolean speak = true;
     /**
      * Base trust is the trust someone will have in a certain market
@@ -30,7 +31,6 @@ public class Buyer extends Unit implements StockObserver {
     double price;
     volatile boolean newpricing = false;
     StockMarket stockMarket;
-    String name;
     /**
      * current holding of the buyer.
      */
@@ -39,21 +39,22 @@ public class Buyer extends Unit implements StockObserver {
     double Capital = 1000;
 
 
-    public Buyer(SimulationInput input) {
-        super(input);
-        StartNetWorth = holding*stockMarket.getCurrentPrice() + Capital;
-    }
     public Buyer(SimulationInput input, String name, int holding, StockMarket stockMarket, double baseTrust, double activity) {
-        super(input);
-        System.out.println("Creating Buyer");
-        this.name = name;
+        super(name, input);
+        System.out.println("Buyer initialized: " + getName());
         this.holding = holding;
         this.stockMarket = stockMarket;
         this.baseTrust = baseTrust;
         this.activity = activity;
         stockMarket.TrackedStock.addObserver(this);
         stockMarket.addBuyer(this);
-        StartNetWorth = holding*stockMarket.getCurrentPrice() + Capital;
+        StartNetWorth = holding * stockMarket.getCurrentPrice() + Capital;
+
+        // Register stats like Robot
+        this.getStats().addStatistic("Total Buys", new BasicStatistic("Total Buys"));
+        this.getStats().addStatistic("Total Sells", new BasicStatistic("Total Sells"));
+        this.getStats().addStatistic("Total Buy Value", new BasicStatistic("Total Buy Value"));
+        this.getStats().addStatistic("Total Sell Value", new BasicStatistic("Total Sell Value"));
     }
     private long getTradeCooldownMillis() {
         double ratio = activity / 100.0;
@@ -128,10 +129,10 @@ public class Buyer extends Unit implements StockObserver {
             double buyRescue = baseTrust * 0.3;
             double activityBoost = activity * 0.2;
             confidence = buyRescue - sellPressure + activityBoost + randomness;
-            System.out.println(name + " sees a CRASHING market");
+            System.out.println(getName() + " sees a CRASHING market");
         } else if (trendScore <= -5) {
             confidence = ((50 - baseTrust) * 0.5) + (activity * 0.2) + randomness;
-            System.out.println(name + " sees a DECLINING market");
+            System.out.println(getName() + " sees a DECLINING market");
         } else if (trendScore <= 5) {
             double trustBias = (baseTrust - 50) * 0.05;
             double activityBias = (activity - 50) * 0.05;
@@ -141,12 +142,12 @@ public class Buyer extends Unit implements StockObserver {
             double trustBias = (baseTrust - 50) * 0.5;
             double activityBoost = activity * 0.2;
             confidence = trustBias + activityBoost + randomness;
-            System.out.println(name + " sees a RISING market");
+            System.out.println(getName() + " sees a RISING market");
         } else {
             double trustBias = baseTrust * 0.8;
             double activityBoost = activity * -0.3;
             confidence = trustBias + activityBoost + randomness;
-            System.out.println(name + " sees a BOOMING market");
+            System.out.println(getName() + " sees a BOOMING market");
         }
 
         if (confidence < -10 && holding > 0) return 1;
@@ -217,11 +218,13 @@ public class Buyer extends Unit implements StockObserver {
                 int soldAmount = getTransactionAmount(true);
                 stockMarket.sell(soldAmount, this);
                 if (speak) {
-                    System.out.println(name + " Sold " + soldAmount + " shares at a price of " +
+                    System.out.println(getName() + " Sold " + soldAmount + " shares at a price of " +
                             stockMarket.getCurrentPrice() + " totaling at: " +
                             (stockMarket.getCurrentPrice() * soldAmount) + " | Capital: " + Capital);
                 }
                 totalEarned += soldAmount * stockMarket.getCurrentPrice();
+                this.getStats().getStatistic("Total Sells").addValue(soldAmount);
+                this.getStats().getStatistic("Total Sell Value").addValue(soldAmount * stockMarket.getCurrentPrice());
                 break;
             case 2: // BUY
                 int buyAmount = getTransactionAmount(false);
@@ -230,10 +233,12 @@ public class Buyer extends Unit implements StockObserver {
                 if (Capital >= cost && buyAmount > 0) {
                     stockMarket.buy(buyAmount, this);
                     if (speak) {
-                        System.out.println(name + " bought " + buyAmount + " shares at a price of " +
+                        System.out.println(getName() + " bought " + buyAmount + " shares at a price of " +
                                 stockMarket.getCurrentPrice() + " | Cost: " + cost + " | Capital: " + Capital);
                     }
                     totalSpent += cost;
+                    this.getStats().getStatistic("Total Buys").addValue(buyAmount);
+                    this.getStats().getStatistic("Total Buy Value").addValue(cost);
                 }
                 break;
             case 3:
@@ -248,43 +253,66 @@ public class Buyer extends Unit implements StockObserver {
      */
     @Override
     public void submitStatistics() {
+        double netProfit = totalEarned - totalSpent;
+        double currentNetWorth = Capital + (holding * stockMarket.getCurrentPrice());
+        double netWorthChange = currentNetWorth - StartNetWorth;
 
+        double avgBuyPrice = (this.getStats().getStatistic("Total Buys").summarize() > 0)
+                ? this.getStats().getStatistic("Total Buy Value").summarize() /
+                this.getStats().getStatistic("Total Buys").summarize()
+                : 0;
+
+        double avgSellPrice = (this.getStats().getStatistic("Total Sells").summarize() > 0)
+                ? this.getStats().getStatistic("Total Sell Value").summarize() /
+                this.getStats().getStatistic("Total Sells").summarize()
+                : 0;
+
+        this.getStats().addStatistic("Net Profit", new BasicStatistic("Net Profit"));
+        this.getStats().getStatistic("Net Profit").addValue(netProfit);
+
+        this.getStats().addStatistic("Net Worth", new BasicStatistic("Net Worth"));
+        this.getStats().getStatistic("Net Worth").addValue(currentNetWorth);
+
+        this.getStats().addStatistic("Net Worth Change", new BasicStatistic("Net Worth Change"));
+        this.getStats().getStatistic("Net Worth Change").addValue(netWorthChange);
+
+        this.getStats().addStatistic("Average Buy Price", new BasicStatistic("Average Buy Price"));
+        this.getStats().getStatistic("Average Buy Price").addValue(avgBuyPrice);
+
+        this.getStats().addStatistic("Average Sell Price", new BasicStatistic("Average Sell Price"));
+        this.getStats().getStatistic("Average Sell Price").addValue(avgSellPrice);
+
+        this.getStats().addStatistic("Holding", new BasicStatistic("Holding"));
+        this.getStats().getStatistic("Holding").addValue(holding);
     }
+
 
     @Override
     public void run() {
         System.out.println("\t\t Running Buyer");
-        while (StockMarket.isOpen()) {
-            /// Fix this
-            if(Capital < 0 ){
-                Capital = 0;
-            }
+        while (true) {
             synchronized (this) {
-                while (!newpricing) {
+                while (!newpricing && !stop) {
                     try {
-                        wait(); // wait until notify() is called
+                        wait();
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
+                        return; // ensure exit
                     }
                 }
+
+                if (stop) {
+                    break;
+                }
+
                 performAction();
                 newpricing = false;
-
-                }
-            if(!stockMarket.isOpen()){
-                return;
             }
         }
+        System.out.println("\t\t Stopping Buyer");
     }
 
 
-    /**
-     * Testing grounds
-     * @param args
-     */
-    public static void main(String[] args) {
-        Buyer buyer = new Buyer(new SimulationInput());
-    }
 
     @Override
     public void getnewpricing(double price) {
@@ -308,7 +336,15 @@ public class Buyer extends Unit implements StockObserver {
         return totalEarned - totalSpent;
     }
 
-    public String getName() {
-        return name;
+
+    public void Stop() {
+        stop = true;
+        synchronized (this) {
+            notifyAll(); // Wake from wait()
+        }
+    }
+
+    public void MakeNormal() {
+        this.Capital = 100;
     }
 }

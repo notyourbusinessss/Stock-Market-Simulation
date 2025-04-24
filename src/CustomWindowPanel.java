@@ -76,7 +76,16 @@ public class CustomWindowPanel extends JPanel {
 
         // === Action Listeners ===
         close.addActionListener(e -> {
-            if (exitOnClose) System.exit(0);
+            if (exitOnClose) {
+                frame.dispose();
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
+                StockMarket.CloseMarket();
+                //System.exit(0);
+            }
             else frame.dispose();
         });
         minimize.addActionListener(e -> frame.setState(Frame.ICONIFIED));
