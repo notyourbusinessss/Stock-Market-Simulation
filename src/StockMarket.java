@@ -474,7 +474,7 @@ public class StockMarket extends Unit {
         Buyer buyer2 = factory.createBuyer("Mark -2-", 0.1, 70, 50, false, false);
         Buyer buyer3 = factory.createBuyer("Adam -3-", 0.1, 0, 80, false, false); // Day trader
         Buyer buyer4 = factory.createBuyer("Eve -4-", 0.1, 0, 0, false, false);
-        Buyer buyer5 = factory.createBuyer("Normal Dude -5-", 10.0 / this.avalibleShares, 0, 60, true, false); // Exact share count
+        Buyer buyer5 = factory.createBuyer("Normal Dude -5-", 10.0 / this.avalibleShares, 0, 60, true, false); // Exact share count of about 10 shares
 
         Thread A = new Thread(buyer1);
         Thread B = new Thread(buyer2);

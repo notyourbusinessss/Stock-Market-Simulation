@@ -1,7 +1,9 @@
 # Final : Stock Market Simulation
 ---
 ## What is aims to do
-This will be a simulation of 5 buyers with different habits and how they affect a stock price base on those habits. Furthermore certain 
+This project is a dynamic simulation of a simplified stock market environment, centered around a single stock and five distinct buyers, each with their own behavioral patterns.
+Each buyer has unique traits such as trust level and activity frequency, which influence their trading behavior. These factors—whether they are cautious long-term investors, reactive day traders, or unpredictable speculators—shape how they buy or sell stock in response to real-time market changes.
+The simulation also includes external events (e.g., news headlines) that can impact the stock's price, mimicking real-world volatility. Through this, the simulation models the interplay between individual decision-making and collective market dynamics, showcasing how buyer psychology and external influences drive stock fluctuations.
 
 ## The UI
 Here is the Main UI :\
