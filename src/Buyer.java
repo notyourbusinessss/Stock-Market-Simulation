@@ -219,7 +219,7 @@ public class Buyer extends Unit implements StockObserver {
                     }
                     totalEarned += buyAmount*stockMarket.getCurrentPrice();
                 } else if (speak) {
-                    System.out.println(name + " wanted to buy but couldn't afford. Needed: " + cost + " | Has: " + Capital);
+                    //System.out.println(name + " wanted to buy but couldn't afford. Needed: " + cost + " | Has: " + Capital);
                 }
                 break;
             case 3:

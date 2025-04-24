@@ -61,8 +61,8 @@ public class StockMarket extends Unit {
 
 
 
-    private double lastEventBias = 0.0; // [-1.0 (strongly negative) to +1.0 (strongly positive)]
-    private double marketBias = 0.0; // Range: [-1.0, 1.0]
+    private double lastEventBias = -1.0; // [-1.0 (strongly negative) to +1.0 (strongly positive)]
+    private double marketBias = .5; // Range: [-1.0, 1.0]
     private int nextMajorEventTick = 0;
     private final Random rand = new Random();
 
@@ -331,21 +331,28 @@ public class StockMarket extends Unit {
 
     @Override
     public void run() {
-        Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        Buyer buyer1 = new Buyer(new SimulationInput(), "George -1-", (int) (this.avalibleShares * 0.1), this, 50, 70);
         this.avalibleShares -= buyer1.holding;
-        //buyer1.speak = false;
-        Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 100, 50);
+        buyer1.speak = false;
+        Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 70, 50);
         this.avalibleShares -= buyer2.holding;
-        //RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "Random -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
-        //RandomBuyer buyer4 = new RandomBuyer(new SimulationInput(), "Random -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        buyer2.speak = false;
+        Buyer buyer3 = new Buyer(new SimulationInput(), "Adam -3-", (int) (this.avalibleShares * 0.1), this, 0, 80);
+        this.avalibleShares -= buyer3.holding;
+        buyer3.speak = false;
+        Buyer buyer4 = new Buyer(new SimulationInput(), "Eve -4-", (int) (this.avalibleShares * 0.1), this, 0, 0);
+        this.avalibleShares -= buyer4.holding;
+        buyer4.speak = false;
+        //RandomBuyer buyer3 = new RandomBuyer(new SimulationInput(), "General Market -1-", (int) (this.avalibleShares * 0.1), this, 50, 100);
+        //RandomBuyer buyer4 = new RandomBuyer(new SimulationInput(), "General Market -2-", (int) (this.avalibleShares * 0.1), this, 50, 100);
         Thread A = new Thread(buyer1);
         Thread B = new Thread(buyer2);
-        //Thread C = new Thread(buyer3);
-        //Thread D = new Thread(buyer4);
+        Thread C = new Thread(buyer3);
+        Thread D = new Thread(buyer4);
         A.start();
         B.start();
-        //C.start();
-        //D.start();
+        C.start();
+        D.start();
 
 
 
@@ -399,7 +406,7 @@ public class StockMarket extends Unit {
     }
 
     public static void main(String[] args) {
-        StockMarket stockMarket = new StockMarket(new SimulationInput(), 10000, 50.00, 1000, 0);
+        StockMarket stockMarket = new StockMarket(new SimulationInput(), 1000, 50.00, 1000, 0);
         Thread A = new Thread(stockMarket);
         A.start();
     }
