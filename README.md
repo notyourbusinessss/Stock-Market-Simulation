@@ -32,7 +32,9 @@ will control either we keep old data or we trim it, meaning disregard old data a
 - ### Toggle Trading UI
 The Trading UI is a UI given in order to trade in the simulated market.\
 here's what it looks like :\
-![](Documents/TradingUI.png)
+![](Documents/TradingUI.png)\
+This shows everything that you have and the current price of the market for example here the current price is 41.94. you own 0 stocks, and have 1000$ left to spend.
+no profit or loss since, no trade was made. You can also change the amount of stocks you buy or sell at once by simply clicking and editing the Amount to simulate: 10 
 
 - ### Toggle Stats UI
 ![](Documents/StatsUI.png)
