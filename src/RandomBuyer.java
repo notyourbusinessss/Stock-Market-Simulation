@@ -2,7 +2,6 @@ import Skeleton.SimulationInput;
 import java.util.Random;
 
 public class RandomBuyer extends Buyer {
-
     public RandomBuyer(SimulationInput input, String name, int holding, StockMarket stockMarket, double baseTrust, double activity) {
         super(input, name, holding, stockMarket, baseTrust, activity);
         this.speak = false;

@@ -174,9 +174,6 @@ public class ArrowPanel extends JPanel {
         buttonPanel.add(statstogglebutton);
 
 
-
-
-
         rightPanel.add(topPanel, BorderLayout.NORTH);
         rightPanel.add(buttonPanel, BorderLayout.SOUTH);
 

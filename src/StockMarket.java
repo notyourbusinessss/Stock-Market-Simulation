@@ -10,6 +10,8 @@ import java.util.concurrent.Semaphore;
 
 
 public class StockMarket extends Unit {
+
+    //just some fun lines
     String[] positiveEvents = {
             "Company releases groundbreaking new product.",
             "Earnings report exceeds all expectations.",
@@ -30,7 +32,70 @@ public class StockMarket extends Unit {
             "Positive report from regulatory agency.",
             "Supply chain improvements reduce operating costs.",
             "Company recognized with industry award.",
-            "Institutional investor increases stake."
+            "Institutional investor increases stake.",
+            "Unexpected patent approval boosts company valuation.",
+            "Government introduces favorable regulation for industry.",
+            "Industry-wide demand surge benefits company operations.",
+            "Investor day presentation impresses Wall Street.",
+            "New subscription model outperforms expectations.",
+            "Exclusive media coverage highlights growth potential.",
+            "Influencer campaign goes viral, boosts brand.",
+            "Strong holiday season sales reported.",
+            "Competitor acquisition drives market consolidation optimism.",
+            "Debt refinancing secures lower interest rates.",
+            "Insider purchases signal executive confidence.",
+            "AI integration improves company efficiency.",
+            "Expansion into emerging markets shows early success.",
+            "Renewable energy transition earns ESG praise.",
+            "Successful IPO of subsidiary company.",
+            "Product gets featured in top consumer rankings.",
+            "Cloud migration slashes IT overhead.",
+            "Long-term contract secured with government agency.",
+            "Shareholders vote overwhelmingly in favor of new direction.",
+            "R&D breakthrough opens up new revenue stream.",
+            "Stock added to major market index (e.g., S&P 500).",
+            "Company signs multi-year deal with global retailer.",
+            "AI-driven analytics boost forecast accuracy.",
+            "Consumer loyalty program sees massive adoption.",
+            "Record-breaking preorders reported for new product.",
+            "Environmental initiative praised by watchdogs.",
+            "Breakthrough in renewable tech positions company as leader.",
+            "Rebound in sector lifts entire industry.",
+            "Stock hits all-time high after bullish forecast.",
+            "Strong institutional buying reported.",
+            "Company announces zero-debt milestone.",
+            "Top-rated app in app store rankings.",
+            "Record number of new customer acquisitions.",
+            "Positive earnings surprise beats all estimates.",
+            "Free cash flow exceeds previous projections.",
+            "Strong forward guidance issued by executives.",
+            "Analysts revise target price upward.",
+            "CEO featured in major business publication.",
+            "Product receives major certification or approval.",
+            "Major competitor exits market, increasing share potential.",
+            "Unexpected shoutout from Elon Musk sends stock soaring.",
+            "Company meme goes viral, boosts brand awareness.",
+            "Stock trending on Reddit's r/wallstreetbets.",
+            "Rumors swirl of a tech giant acquisition.",
+            "Unexpected endorsement from celebrity investor.",
+            "Company AI bot beats human competition in contest.",
+            "CEO goes on popular podcast, shares bold vision.",
+            "Government offers massive subsidy for green initiative.",
+            "Stock hits circuit breaker due to rapid gains.",
+            "Company product featured in blockbuster movie.",
+            "Cryptocurrency integration excites investors.",
+            "Viral TikTok boosts product sales overnight.",
+            "Insiders increase holdings — markets react positively.",
+            "Company launches NFT line, sells out in seconds.",
+            "First in industry to adopt quantum encryption.",
+            "New space partnership with national space agency.",
+            "Environmental impact declared 'net positive' by watchdog.",
+            "CEO surprises market by slashing their own salary.",
+            "Revenue milestone reached 6 months early.",
+            "Influencer giveaway campaign breaks social media records."
+
+
+
     };
 
 
@@ -54,7 +119,66 @@ public class StockMarket extends Unit {
             "Security breach affects customer data.",
             "Labor strike halts operations.",
             "Analyst changes rating to 'Sell'.",
-            "Key executive unexpectedly resigns."
+            "Key executive unexpectedly resigns.",
+            "Patent dispute jeopardizes key product.",
+            "Unexpected tax ruling increases liabilities.",
+            "Major client announces shift to competitor.",
+            "Cost overruns delay critical project.",
+            "Company fined for environmental violations.",
+            "Hacktivist group targets company website.",
+            "New legislation threatens current business model.",
+            "Internal email leak reveals dysfunction.",
+            "Public boycott called over ethical concerns.",
+            "Whistleblower reveals potential fraud.",
+            "Earnings guidance revised downward.",
+            "High turnover rates spark management worries.",
+            "Employee satisfaction ratings plummet.",
+            "Negative analyst note triggers sell-off.",
+            "Class-action lawsuit initiated by consumers.",
+            "Boardroom conflict surfaces in media.",
+            "Product flunks independent safety test.",
+            "Company delisted from sustainability index.",
+            "Quarterly earnings fall short of projections.",
+            "Investigative report links company to unethical supplier.",
+            "Stock dropped from major index.",
+            "Sudden downgrade from 'Buy' to 'Hold'.",
+            "Shareholder lawsuit targets board decisions.",
+            "Interest rate hikes hit financing plans.",
+            "Important vendor files for bankruptcy.",
+            "New tariffs impact supply chain costs.",
+            "Failed merger results in investor backlash.",
+            "Audit firm resigns unexpectedly.",
+            "Quarterly revenue falls below street estimates.",
+            "Reputation hit by poor working condition reports.",
+            "Disappointing product review goes viral.",
+            "Early investor pulls out of funding round.",
+            "Cost-cutting leads to mass layoffs.",
+            "Flagship store closes in key market.",
+            "Data loss incident raises compliance concerns.",
+            "Key partner ends long-term agreement.",
+            "Company misses debt repayment deadline.",
+            "Product pulled from shelves by retailer.",
+            "Bankruptcy rumors surface in financial circles.",
+            "Stock price plummets after insider sells large stake.",
+            "CEO tweets something questionable — again.",
+            "Meme stock status fades, investors flee.",
+            "Internal AI mistakenly leaks confidential data.",
+            "Livestreamed investor call goes off the rails.",
+            "Product explodes during live demo.",
+            "CEO caught playing mobile games during earnings call.",
+            "Market confused by cryptic company tweet.",
+            "Unintended 'reply all' email goes public.",
+            "Investor sues over misleading horoscope-style guidance.",
+            "Annual report accidentally includes lorem ipsum.",
+            "Accounting spreadsheet leaked — shows '?? profit'.",
+            "Zoom filter mishap during board meeting leaks online.",
+            "Drone delivery fails spectacularly on live TV.",
+            "Company's VR launch causes mass nausea.",
+            "Marketing AI responds rudely to customers.",
+            "Board member quits via Instagram story.",
+            "Auto-reply email confirms insider trading.",
+            "Stock temporarily delisted due to typo.",
+            "CEO caught using ChatGPT to write mission statement.",
     };
 
 
@@ -62,7 +186,7 @@ public class StockMarket extends Unit {
 
 
     private double lastEventBias = -1.0; // [-1.0 (strongly negative) to +1.0 (strongly positive)]
-    private double marketBias = .5; // Range: [-1.0, 1.0]
+    private double marketBias = 2; // Range: [-1.0, 1.0]
     private int nextMajorEventTick = 0;
     private final Random rand = new Random();
 
@@ -301,14 +425,14 @@ public class StockMarket extends Unit {
             System.out.printf("Positive Market Event: %s\n", message);
             lastNews += String.format(" Stock increased by %.2f%%",severity*100);
             System.out.printf("Stock increased by %.2f%% → New price: %.2f\n", severity * 100, MarketPrice);
-            marketBias += 0.3;
+            marketBias += severity;
         } else {
             String message = negativeEvents[rand.nextInt(negativeEvents.length)];
             lastNews = message;
             System.out.printf("Negative Market Event: %s\n", message);
             lastNews += String.format(" Stock decreased by %.2f%%",severity*100);
             System.out.printf("Stock decreased by %.2f%% → New price: %.2f\n", severity * 100, MarketPrice);
-            marketBias -= 0.3;
+            marketBias -= severity;
         }
 
 
@@ -337,7 +461,7 @@ public class StockMarket extends Unit {
         Buyer buyer2 = new Buyer(new SimulationInput(), "Mark -2-", (int) (this.avalibleShares * 0.1), this, 70, 50);
         this.avalibleShares -= buyer2.holding;
         buyer2.speak = false;
-        Buyer buyer3 = new Buyer(new SimulationInput(), "Adam -3-", (int) (this.avalibleShares * 0.1), this, 0, 80);
+        Buyer buyer3 = new Buyer(new SimulationInput(), "Adam -3-", (int) (this.avalibleShares * 0.1), this, 0, 80);// because of extremly high activity he will buy and sell A LOT, bassically day trader
         this.avalibleShares -= buyer3.holding;
         buyer3.speak = false;
         Buyer buyer4 = new Buyer(new SimulationInput(), "Eve -4-", (int) (this.avalibleShares * 0.1), this, 0, 0);

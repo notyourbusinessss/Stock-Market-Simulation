@@ -197,17 +197,17 @@ public class Buyer extends Unit implements StockObserver {
     @Override
     public void performAction() {
         switch (makeDecision()) {
-            case 1:
+            case 1: // SELL
                 int soldAmount = getTransactionAmount(true);
                 stockMarket.sell(soldAmount, this);
                 if (speak) {
                     System.out.println(name + " Sold " + soldAmount + " shares at a price of " +
                             stockMarket.getCurrentPrice() + " totaling at: " +
                             (stockMarket.getCurrentPrice() * soldAmount) + " | Capital: " + Capital);
-                    totalSpent += soldAmount*stockMarket.getCurrentPrice();
                 }
+                totalEarned += soldAmount * stockMarket.getCurrentPrice();
                 break;
-            case 2:
+            case 2: // BUY
                 int buyAmount = getTransactionAmount(false);
                 double cost = buyAmount * stockMarket.getCurrentPrice();
 
@@ -217,9 +217,7 @@ public class Buyer extends Unit implements StockObserver {
                         System.out.println(name + " bought " + buyAmount + " shares at a price of " +
                                 stockMarket.getCurrentPrice() + " | Cost: " + cost + " | Capital: " + Capital);
                     }
-                    totalEarned += buyAmount*stockMarket.getCurrentPrice();
-                } else if (speak) {
-                    //System.out.println(name + " wanted to buy but couldn't afford. Needed: " + cost + " | Has: " + Capital);
+                    totalSpent += cost;
                 }
                 break;
             case 3:
