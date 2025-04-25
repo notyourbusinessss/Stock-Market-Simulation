@@ -11,7 +11,10 @@ import java.util.concurrent.Semaphore;
 
 public class StockMarket extends Unit {
 
-    //just some fun lines
+    /**
+     * Array of predefined positive news events that can trigger a stock price increase.
+     * Used in major market event simulations.
+     */
     String[] positiveEvents = {
             "Company releases groundbreaking new product.",
             "Earnings report exceeds all expectations.",
@@ -98,7 +101,10 @@ public class StockMarket extends Unit {
 
     };
 
-
+    /**
+     * Array of predefined negative news events that can trigger a stock price decrease.
+     * Used in major market event simulations.
+     */
     String[] negativeEvents = {
             "Unexpected quarterly loss reported.",
             "CEO involved in corporate scandal.",
@@ -184,40 +190,116 @@ public class StockMarket extends Unit {
 
 
 
-
+    /**
+     * Bias introduced by the last major event, ranging from -1.0 (strongly negative)
+     * to +1.0 (strongly positive). Helps influence the direction of future events.
+     */
     private double lastEventBias = -1.0; // [-1.0 (strongly negative) to +1.0 (strongly positive)]
+    /**
+     * Current overall market sentiment bias.
+     * Affects the direction and magnitude of price fluctuations.
+     */
     private double marketBias = 2; // Range: [-1.0, 1.0]
+    /**
+     * Tick count after which the next major market event will occur.
+     */
     private int nextMajorEventTick = 0;
+    /**
+     * Random number generator used for major event logic and noise simulation.
+     */
     private final Random rand = new Random();
-
+    /**
+     * List of all buyer instances participating in the market.
+     */
     private final List<Buyer> buyers = new ArrayList<>();
-
+    /**
+     * Total number of shares sold in the current tick.
+     */
     int AmountSold = 0;
+    /**
+     * Total number of shares bought in the current tick.
+     */
     int AmountBought = 0;
-
+    /**
+     * Delay in milliseconds between each simulation tick.
+     * Lower values speed up the simulation.
+     */
     static int waiting = 10;
+    /**
+     * The singleton Stock object that tracks price and share history.
+     */
     Stock TrackedStock;
+    /**
+     * The number of shares currently available for trading in the market.
+     */
     private int avalibleShares;
+    /**
+     * List of observers (MarketObserver implementations) that react to market updates.
+     */
     private List<MarketObserver> Stocks = new ArrayList<>();
+    /**
+     * The current price of the stock in the market.
+     */
     double MarketPrice;
-
+    /**
+     * Semaphore used to control pausing and resuming the simulation safely across threads.
+     */
     public static final Semaphore pauseLock = new Semaphore(1);
+    /**
+     * Flag indicating whether the simulation is currently paused.
+     */
     private volatile boolean paused = false;
-
+    /**
+     * Indicates whether any stock was bought during the current tick.
+     */
     private boolean wasBuy = false;
+    /**
+     * Indicates whether any stock was sold during the current tick.
+     */
     private boolean wasSell = false;
+    /**
+     * Random number generator used specifically for price noise and decay.
+     */
     private final Random rng = new Random();
-
+    /**
+     * Logical simulation clock representing elapsed ticks since start.
+     */
     int Time;
+    /**
+     * Shared global tick counter across simulation.
+     */
     static int Now;
+    /**
+     * Global flag indicating whether the market is currently open.
+     */
     static boolean open = true;
+    /**
+     * The most recent news event headline. Displayed in the UI.
+     */
     static String lastNews;
+    /**
+     * The number of shares initially available at the start of the simulation.
+     */
     private int initalShares;
-
+    /**
+     * Constructs a basic StockMarket instance with a reference to simulation input.
+     * This constructor is typically used for unit testing or minimal initialization.
+     *
+     * @param input the simulation configuration input
+     */
     public StockMarket(SimulationInput input) {
         super("Market",input);
     }
-
+    /**
+     * Constructs a fully initialized StockMarket simulation with a tracked stock,
+     * buyer registry, news system, and major event scheduler.
+     *
+     * @param input        the simulation input object containing runtime parameters
+     * @param totalShares  the total number of shares available at the beginning of the simulation
+     * @param InitialPrice the initial market price of the stock
+     * @param time         the initial simulation time (used for time tracking)
+     * @param now          the starting tick count of the simulation
+     */
     public StockMarket(SimulationInput input, int totalShares, double InitialPrice, int time, int now) {
         super("Market",input);
         this.avalibleShares = totalShares;
@@ -231,6 +313,9 @@ public class StockMarket extends Unit {
         initalShares = totalShares;
     }
 
+    /**
+     * Toggles the simulation between paused and unpaused state using a semaphore.
+     */
     public void togglePause() {
         if (paused) {
             pauseLock.release();
@@ -243,23 +328,46 @@ public class StockMarket extends Unit {
         }
         paused = !paused;
     }
-
+    /**
+     * Checks whether the simulation is currently paused.
+     *
+     * @return true if paused, false otherwise
+     */
     public boolean isPaused() {
         return paused;
     }
-
+    /**
+     * Retrieves the average market trend over a specified number of past ticks.
+     *
+     * @param GoBack number of past ticks to consider
+     * @return average price over the given period
+     */
     double getMarketTrend(int GoBack) {
         return TrackedStock.getTrend(GoBack);
     }
-
+    /**
+     * Returns the current market price of the stock.
+     *
+     * @return the current stock price
+     */
     double getCurrentPrice() {
         return MarketPrice;
     }
-
+    /**
+     * Replaces the tracked stock's price history with predefined prices.
+     *
+     * @param ForcedMarketPrices list of prices to override with
+     */
     void ForcedMarketPrice(ArrayList<Double> ForcedMarketPrices) {
         TrackedStock.ForcedStock(ForcedMarketPrices);
     }
-
+    /**
+     * Executes a simulated buy operation, deducting shares from the market
+     * and adjusting the buyer's holdings and capital.
+     *
+     * @param amount number of shares to buy
+     * @param buyer  the buyer performing the purchase
+     */
     public void buy(int amount, Buyer buyer) {
         if (avalibleShares >= amount && amount > 0) {
             avalibleShares -= amount;
@@ -270,7 +378,13 @@ public class StockMarket extends Unit {
         }
     }
 
-
+    /**
+     * Executes a simulated sell operation, adding shares to the market
+     * and crediting the buyer's capital.
+     *
+     * @param amount number of shares to sell
+     * @param buyer  the buyer performing the sale
+     */
     public void sell(int amount, Buyer buyer) {
         if (amount > 0) {
             buyer.removeholding(amount);
@@ -281,6 +395,10 @@ public class StockMarket extends Unit {
         }
     }
 
+    /**
+     * Recalculates the stock price based on trading activity and random factors.
+     * Also applies resistance, market bias, and price constraints.
+     */
     synchronized void updateStockPrice() {
         // This method is synchronized to prevent concurrent access issues since it's likely called by multiple threads.
         //System.out.println("\t\t[Updating Stock Price]");
@@ -384,21 +502,34 @@ public class StockMarket extends Unit {
 
 
 
-
+    /**
+     * Returns the current number of available shares in the market.
+     *
+     * @return number of available shares
+     */
     synchronized int getAvalibleShares() {
         return avalibleShares;
     }
-
+    /**
+     * Notifies all registered market observers with the current price and share state.
+     */
     void updateStock() {
         for (MarketObserver observer : Stocks) {
             observer.updateMarketState(avalibleShares, MarketPrice);
         }
     }
-
+    /**
+     * Returns whether the market is currently open.
+     *
+     * @return true if market is open, false otherwise
+     */
     static boolean isOpen() {
         return open;
     }
-
+    /**
+     * Triggers a random major market event, which significantly affects the price
+     * and updates the market sentiment and news.
+     */
     void MajorEvent() {
         Random rand = new Random();
 
@@ -449,23 +580,39 @@ public class StockMarket extends Unit {
         marketBias = Math.max(-1.0, Math.min(1.0, marketBias));
 
     }
-
+    /**
+     * Registers a buyer into the simulation.
+     *
+     * @param buyer the buyer to add
+     */
     public void addBuyer(Buyer buyer) {
         buyers.add(buyer);
     }
+    /**
+     * Reduces the number of shares available in the market by a specified amount.
+     *
+     * @param amount the number of shares to remove
+     */
     public void decreaseAvalibleShares(int amount) {
         this.avalibleShares -= amount;
     }
 
-
+    /**
+     * Required override from Unit. No specific logic here.
+     */
     @Override
     public void performAction() {}
-
+    /**
+     * Required override from Unit. No statistics submitted here.
+     */
     @Override
     public void submitStatistics() {}
 
 
-
+    /**
+     * Starts the simulation loop: initializes buyers and GUI,
+     * performs updates, and simulates real-time market activity.
+     */
     @Override
     public void run() {
         BuyerFactory factory = new BuyerFactory(this);
@@ -563,19 +710,28 @@ public class StockMarket extends Unit {
         System.out.println("Stock Market is now closed");
         return;
     }
+    /**
+     * Sets the market status to closed, signaling the simulation to stop.
+     */
     static public void CloseMarket(){
         open = false;
     }
-
+    /**
+     * Returns a list of all buyers currently in the simulation.
+     *
+     * @return list of Buyer objects
+     */
     public List<Buyer> getBuyers() {
         return buyers;
     }
 
-
+    /**
+     * Returns the total number of shares at the beginning of the simulation.
+     *
+     * @return initial share count
+     */
     public double getTotalShares() {
         return initalShares;
     }
-    public static void main(String[] args) {
 
-    }
 }
