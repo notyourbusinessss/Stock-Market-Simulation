@@ -56,8 +56,7 @@ public class StatisticsContainer {
 	}
 
 	/**
-	 * Add a statistic component to the hash table.
-	 * @param name
+	 * Add a statistic component to the hash table
 	 */
 	public Statistics addComponent (String component){
 		allStatistics.put(component, new Statistics(this.input));
@@ -67,7 +66,6 @@ public class StatisticsContainer {
 
 	/**
 	 * Get the server statistics for the given server name.
-	 * @param name Name of the server.
 	 * @return Server statistics.
 	 */
 	public Statistics getComponent (String component){

@@ -8,7 +8,23 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 
-
+/**
+ * The StockMarket class is the core simulation engine for the stock trading environment.
+ * It manages buyer threads, market price updates, available shares, and external influences such as news events.
+ *
+ * Key features include:
+ * <ul>
+ *     <li>Dynamic price updates based on buy/sell pressure and market sentiment</li>
+ *     <li>Major positive or negative events that impact the market through curated news headlines</li>
+ *     <li>Observer pattern integration to notify stocks and buyers of state changes</li>
+ *     <li>GUI synchronization with real-time updates via the {@link ArrowPanel}</li>
+ *     <li>Pause/resume functionality via semaphores</li>
+ *     <li>Thread-safe simulation loop with support for multiple buyers running in parallel</li>
+ * </ul>
+ *
+ * The StockMarket extends the {@link Unit} class as part of the simulation framework,
+ * and is expected to override {@code performAction}, {@code submitStatistics}, and {@code run}.
+ */
 public class StockMarket extends Unit {
 
     /**

@@ -3,7 +3,13 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.LinkedList;
 import java.util.List;
-
+/**
+ * ArrowPanel is a custom Swing panel used in the stock market simulation GUI.
+ * It displays the real-time stock graph (line and candlestick charts), handles user controls
+ * (such as pausing, toggling visibility of data), and optionally visualizes news or events.
+ *
+ * It is directly tied to a {@link StockMarket} instance and renders its state to the screen.
+ */
 public class ArrowPanel extends JPanel {
 
     /** List of currently active scrolling news messages. */
